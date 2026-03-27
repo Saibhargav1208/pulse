@@ -23,7 +23,7 @@
     .big-title{font-family:var(--font-display);font-size:34px;font-weight:800;line-height:1.05;letter-spacing:-1px}
     .big-title span{color:var(--accent)}
     .sub{font-size:12px;color:var(--muted);line-height:1.7}
-    .key-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
     .key-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .2s}
     .key-input:focus{border-color:var(--accent)}
     .key-input::placeholder{color:var(--muted)}
@@ -35,7 +35,7 @@
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;align-self:center}
     @keyframes spin{to{transform:rotate(360deg)}}
     .load-title{font-family:var(--font-display);font-size:18px;font-weight:700;text-align:center}
-    .load-step{font-size:12px;color:var(--muted);min-height:18px;text-align:center;word-break:break-all}
+    .load-step{font-size:12px;color:var(--muted);min-height:18px;text-align:center}
     .load-bar-wrap{width:100%;height:4px;background:var(--border);border-radius:99px;overflow:hidden}
     .load-bar{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .4s ease}
     .cat-intro{font-family:var(--font-display);font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-.5px}
@@ -80,7 +80,9 @@
     .send-btn{padding:10px 15px;background:var(--accent);border:none;border-radius:8px;color:white;cursor:pointer;font-size:16px}
     .restart-row{text-align:center}
     .restart-link{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-    .error-box{background:#2a1010;border:1px solid #f76a6a;border-radius:8px;padding:12px;font-size:11px;color:#f76a6a;line-height:1.6}
+    .error-box{background:#2a1010;border:1px solid #f76a6a;border-radius:8px;padding:12px;font-size:11px;color:#f76a6a;line-height:1.6;display:none}
+    .divider{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:10px}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
   </style>
 </head>
 <body>
@@ -91,17 +93,27 @@
     <div class="status-pill" id="statusPill">idle</div>
   </div>
 
-  <!-- SCREEN 1: KEY -->
-  <div class="screen active" id="s-key" style="padding:20px 0">
+  <!-- SCREEN 1: KEYS -->
+  <div class="screen active" id="s-key" style="padding:16px 0">
     <div class="big-title">Your news,<br><span>out loud.</span></div>
-    <p class="sub">Paste your free Groq API key — stays in your browser only.</p>
+    <p class="sub">Two free keys — that's all you need.</p>
+
     <div>
-      <p class="key-label">Groq API Key</p>
-      <input class="key-input" id="keyInput" type="password" placeholder="gsk_..." />
+      <p class="field-label">NewsAPI Key</p>
+      <input class="key-input" id="newsKey" type="password" placeholder="Paste NewsAPI key..." />
     </div>
-    <p class="key-note">Free key → <a href="https://console.groq.com" target="_blank">console.groq.com</a> → sign up → API Keys → Create. 30 seconds.</p>
+    <p class="key-note">Free at <a href="https://newsapi.org/register" target="_blank">newsapi.org/register</a></p>
+
+    <div class="divider">and</div>
+
+    <div>
+      <p class="field-label">Groq API Key</p>
+      <input class="key-input" id="groqKey" type="password" placeholder="gsk_..." />
+    </div>
+    <p class="key-note">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
+
     <button class="go-btn" id="goBtn" onclick="startFetch()">Fetch Today's News →</button>
-    <div id="keyError" class="error-box" style="display:none"></div>
+    <div class="error-box" id="keyError"></div>
   </div>
 
   <!-- SCREEN 2: LOADING -->
@@ -139,20 +151,18 @@
 </div>
 
 <script>
-// ── CATEGORIES ────────────────────────────────
+// ── CATEGORIES ────────────────────────────────────────────
+// NewsAPI `q` param = search query for that topic
 const CATEGORIES = [
-  { id:"anime",   label:"Anime",      emoji:"🎌", color:"#f7a06a",
-    rss:"https://www.animenewsnetwork.com/all/rss.xml", topic:"anime and manga" },
-  { id:"f1",      label:"F1",         emoji:"🏎️", color:"#6af7f7",
-    rss:"https://www.motorsport.com/rss/f1/news/", topic:"Formula 1 racing" },
-  { id:"cricket", label:"Cricket",    emoji:"🏏", color:"#6af7a0",
-    rss:"https://feeds.bbci.co.uk/sport/cricket/rss.xml", topic:"cricket" },
-  { id:"tech",    label:"AI & Tech",  emoji:"💻", color:"#a06af7",
-    rss:"https://techcrunch.com/feed/", topic:"AI and technology" },
-  { id:"world",   label:"World News", emoji:"🌍", color:"#f76a6a",
-    rss:"https://feeds.bbci.co.uk/news/world/rss.xml", topic:"world news" }
+  { id:"anime",   label:"Anime",      emoji:"🎌", color:"#f7a06a", q:"anime OR manga OR crunchyroll" },
+  { id:"f1",      label:"F1",         emoji:"🏎️", color:"#6af7f7", q:"Formula 1 OR F1 racing OR grand prix" },
+  { id:"cricket", label:"Cricket",    emoji:"🏏", color:"#6af7a0", q:"cricket OR IPL OR test match" },
+  { id:"tech",    label:"AI & Tech",  emoji:"💻", color:"#a06af7", q:"artificial intelligence OR OpenAI OR tech startup" },
+  { id:"world",   label:"World News", emoji:"🌍", color:"#f76a6a", q:"world news OR international OR global politics" }
 ];
 
+// ── STYLE ─────────────────────────────────────────────────
+// Change to: "short" | "informative" | "fun" | "formal"
 const STYLE = "short";
 const STYLE_PROMPTS = {
   short:       "Casual, punchy, like texting a friend. Max 12 words per field.",
@@ -161,63 +171,50 @@ const STYLE_PROMPTS = {
   formal:      "News anchor tone, neutral and clear. Max 15 words per field."
 };
 
-let GROQ_KEY = "";
-let newsData  = {};
+let NEWS_KEY = "", GROQ_KEY = "";
+let newsData = {};
 
-// ── SCREENS ───────────────────────────────────
+// ── SCREENS ───────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-
 function setStep(msg, pct) {
   document.getElementById("loadStep").textContent = msg;
   document.getElementById("loadBar").style.width  = pct + "%";
-  console.log(`[${pct}%] ${msg}`);
+}
+function showError(msg) {
+  const el = document.getElementById("keyError");
+  el.textContent = msg;
+  el.style.display = "block";
 }
 
-// ── RSS FETCH via allorigins CORS proxy ───────
-async function fetchRSS(url) {
-  // allorigins is a free reliable CORS proxy
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  console.log("Fetching RSS:", url);
+// ── NEWSAPI FETCH ─────────────────────────────────────────
+async function fetchNews(query) {
+  const url = `https://newsapi.org/v2/everything?` +
+    `q=${encodeURIComponent(query)}` +
+    `&language=en` +
+    `&sortBy=publishedAt` +
+    `&pageSize=3` +
+    `&apiKey=${NEWS_KEY}`;
 
-  const res  = await fetch(proxy);
+  const res  = await fetch(url);
   const data = await res.json();
 
-  if (!data.contents) throw new Error("Empty response from proxy");
+  if (data.status !== "ok") throw new Error(data.message || "NewsAPI error");
+  if (!data.articles?.length) throw new Error("No articles found");
 
-  // Parse XML with DOMParser
-  const parser = new DOMParser();
-  const xml    = parser.parseFromString(data.contents, "text/xml");
-  const items  = Array.from(xml.querySelectorAll("item")).slice(0, 3);
-
-  if (items.length === 0) throw new Error("No items found in RSS feed");
-
-  return items.map(item => ({
-    title:   item.querySelector("title")?.textContent?.trim() || "",
-    summary: (item.querySelector("description")?.textContent || "")
-               .replace(/<[^>]*>/g, "").trim().slice(0, 300)
+  return data.articles.slice(0, 3).map(a => ({
+    title:   a.title   || "",
+    summary: (a.description || a.content || "").replace(/<[^>]*>/g,"").slice(0, 300)
   }));
 }
 
-// ── GROQ SUMMARIZE ────────────────────────────
+// ── GROQ SUMMARIZE ────────────────────────────────────────
 async function summarizeWithGroq(rawItems, catLabel, catTopic) {
-  const content = rawItems.map((r, i) =>
-    `[${i+1}] Title: ${r.title}\nSummary: ${r.summary}`
-  ).join("\n\n");
-
-  const prompt = `Summarize these ${catTopic} news items for a voice app. The user HEARS this, not reads it.
-Style: ${STYLE_PROMPTS[STYLE]}
-Return ONLY a valid JSON array of objects. Each object must have exactly: "headline", "detail", "extra".
-- headline: what happened
-- detail: key fact (date, name, number)
-- extra: fun context or reaction
-NO markdown. NO extra text. ONLY the JSON array.
-
-${content}`;
-
-  console.log("Calling Groq for:", catLabel);
+  const content = rawItems
+    .map((r, i) => `[${i+1}] Title: ${r.title}\nSummary: ${r.summary}`)
+    .join("\n\n");
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
@@ -226,57 +223,60 @@ ${content}`;
       "Authorization": `Bearer ${GROQ_KEY}`
     },
     body: JSON.stringify({
-      model:       "llama3-8b-8192",
-      max_tokens:  600,
+      model: "llama3-8b-8192",
+      max_tokens: 600,
       temperature: 0.7,
       messages: [
-        { role: "system", content: "You return ONLY valid JSON arrays. No explanation, no markdown, no extra text." },
-        { role: "user",   content: prompt }
+        {
+          role: "system",
+          content: "You return ONLY valid JSON arrays. No explanation, no markdown, no extra text whatsoever."
+        },
+        {
+          role: "user",
+          content: `Summarize these ${catTopic} news items for a voice app. User HEARS this, not reads it.
+Style: ${STYLE_PROMPTS[STYLE]}
+Return ONLY a JSON array. Each object must have exactly: "headline", "detail", "extra"
+- headline: what happened (punchy, heard first)
+- detail:   key fact — date, name, number (heard if user asks more)
+- extra:    fun reaction or context (heard last)
+
+${content}`
+        }
       ]
     })
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Groq error ${res.status}: ${err}`);
+    throw new Error(`Groq ${res.status}: ${err.slice(0,100)}`);
   }
 
   const data = await res.json();
   let text = (data.choices?.[0]?.message?.content || "[]").trim();
   text = text.replace(/```json|```/g, "").trim();
 
-  console.log("Groq response for", catLabel, ":", text.slice(0, 200));
-
-  // Find JSON array in response
-  const startIdx = text.indexOf("[");
-  const endIdx   = text.lastIndexOf("]");
-  if (startIdx !== -1 && endIdx !== -1) {
-    text = text.slice(startIdx, endIdx + 1);
-  }
+  // Robustly extract JSON array
+  const start = text.indexOf("["), end = text.lastIndexOf("]");
+  if (start !== -1 && end !== -1) text = text.slice(start, end + 1);
 
   try {
     return JSON.parse(text);
-  } catch(e) {
-    console.error("JSON parse failed:", e, "Raw:", text);
+  } catch {
+    // Fallback: use raw titles
     return rawItems.map(r => ({ headline: r.title, detail: "", extra: "" }));
   }
 }
 
-// ── MAIN FETCH ────────────────────────────────
+// ── MAIN FETCH FLOW ───────────────────────────────────────
 async function startFetch() {
-  GROQ_KEY = document.getElementById("keyInput").value.trim();
-
-  if (!GROQ_KEY) {
-    showKeyError("Please paste your Groq API key first.");
-    return;
-  }
-  if (!GROQ_KEY.startsWith("gsk_")) {
-    showKeyError("Key should start with gsk_ — check you copied the full key.");
-    return;
-  }
-
-  document.getElementById("goBtn").disabled   = true;
+  NEWS_KEY = document.getElementById("newsKey").value.trim();
+  GROQ_KEY = document.getElementById("groqKey").value.trim();
   document.getElementById("keyError").style.display = "none";
+
+  if (!NEWS_KEY) { showError("Please paste your NewsAPI key."); return; }
+  if (!GROQ_KEY || !GROQ_KEY.startsWith("gsk_")) { showError("Please paste your Groq key (starts with gsk_)."); return; }
+
+  document.getElementById("goBtn").disabled = true;
   show("s-load");
 
   let anySuccess = false;
@@ -284,20 +284,18 @@ async function startFetch() {
   for (let i = 0; i < CATEGORIES.length; i++) {
     const cat = CATEGORIES[i];
     const pct = Math.round((i / CATEGORIES.length) * 90);
-    setStep(`${cat.emoji} Fetching ${cat.label}...`, pct);
 
     try {
-      const raw        = await fetchRSS(cat.rss);
-      console.log(`Got ${raw.length} items for ${cat.id}`);
-      setStep(`${cat.emoji} Summarizing ${cat.label} with AI...`, pct + 9);
-      newsData[cat.id] = await summarizeWithGroq(raw, cat.label, cat.topic);
-      console.log(`Summarized ${newsData[cat.id].length} items for ${cat.id}`);
+      setStep(`${cat.emoji} Fetching ${cat.label}...`, pct);
+      const raw = await fetchNews(cat.q);
+
+      setStep(`${cat.emoji} Summarizing ${cat.label} with AI...`, pct + 8);
+      newsData[cat.id] = await summarizeWithGroq(raw, cat.label, cat.id);
+
       anySuccess = true;
     } catch(e) {
-      console.error(`Failed ${cat.id}:`, e.message);
+      console.error(cat.id, e.message);
       newsData[cat.id] = [];
-      setStep(`⚠️ ${cat.label} failed: ${e.message}`, pct + 9);
-      await new Promise(r => setTimeout(r, 800));
     }
   }
 
@@ -307,7 +305,7 @@ async function startFetch() {
   if (!anySuccess) {
     show("s-key");
     document.getElementById("goBtn").disabled = false;
-    showKeyError("All feeds failed to load. Check browser console (F12) for details. Try a different network or VPN.");
+    showError("Failed to load news. Check your NewsAPI key is correct and active.");
     return;
   }
 
@@ -315,12 +313,7 @@ async function startFetch() {
   show("s-cat");
 }
 
-function showKeyError(msg) {
-  const el = document.getElementById("keyError");
-  el.textContent = msg;
-  el.style.display = "block";
-}
-
+// ── CATEGORY GRID ─────────────────────────────────────────
 function buildCategoryGrid() {
   const grid = document.getElementById("catGrid");
   grid.innerHTML = "";
@@ -338,13 +331,12 @@ function buildCategoryGrid() {
   });
 }
 
-// ── STATE MACHINE ─────────────────────────────
+// ── STATE MACHINE ─────────────────────────────────────────
 const S = { FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing' };
 let state = S.FOLLOWUP, currentCat = null, currentNews = null;
 
 function startConversation(catId) {
-  currentCat  = CATEGORIES.find(c => c.id === catId);
-  const items = newsData[catId] || [];
+  currentCat = CATEGORIES.find(c => c.id === catId);
   show("s-conv");
   setTimeout(deliver, 350);
 }
@@ -365,8 +357,7 @@ function deliver() {
 function route(i) {
   if (state === S.FOLLOWUP) {
     if (i === 'no') { closeConv(); return; }
-    const detail = currentNews.detail || "That's all I have on this!";
-    appSays(detail, () => {
+    appSays(currentNews.detail || "That's all the detail I have!", () => {
       state = S.ANSWERING;
       setTimeout(() => appSays("Anything else?", () => micState('ready')), 500);
     });
@@ -389,7 +380,7 @@ function intent(t) {
   return 'yes';
 }
 
-// ── TTS ───────────────────────────────────────
+// ── TTS ───────────────────────────────────────────────────
 const synth = window.speechSynthesis;
 let voices = [];
 function loadVoices() { voices = synth.getVoices(); }
@@ -408,7 +399,7 @@ function speak(text, onEnd) {
   synth.speak(utt);
 }
 
-// ── STT ───────────────────────────────────────
+// ── STT ───────────────────────────────────────────────────
 let recog = null, listening = false;
 function buildRecog() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -420,18 +411,18 @@ function buildRecog() {
   r.onerror  = () => { listening=false; micState('ready'); };
   return r;
 }
-function startListen()  { recog=buildRecog(); if(!recog){document.getElementById('textIn').focus();return} recog.start(); listening=true; micState('listening'); setStatus('listening'); wave('listening'); }
-function stopListen()   { if(recog) recog.stop(); listening=false; micState('ready'); }
-function toggleMic()    { listening ? stopListen() : startListen(); }
+function startListen() { recog=buildRecog(); if(!recog){document.getElementById('textIn').focus();return} recog.start(); listening=true; micState('listening'); setStatus('listening'); wave('listening'); }
+function stopListen()  { if(recog) recog.stop(); listening=false; micState('ready'); }
+function toggleMic()   { listening ? stopListen() : startListen(); }
 
-// ── UI HELPERS ────────────────────────────────
-function setStatus(s)   { const el=document.getElementById('statusPill'); el.textContent=s; el.className='status-pill'+(s!=='idle'?' '+s:''); }
-function wave(mode)     { const wf=document.getElementById('waveform'); wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':''); }
-function micState(s)    { document.getElementById('micBtn').className='mic-btn '+s; document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak'; }
-function bubble(who,text){ const chat=document.getElementById('chat'); const d=document.createElement('div'); d.className='bubble '+who; d.innerHTML=`<div class="avatar">${who==='app'?'🎙':'👤'}</div><div class="btext">${text}</div>`; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; }
-function appSays(text,then){ bubble('app',text); speak(text,then); }
-function handleInput(text){ if(!text.trim()) return; bubble('user',text); route(intent(text)); }
-function sendText()     { const el=document.getElementById('textIn'); const v=el.value.trim(); if(!v) return; el.value=''; handleInput(v); }
+// ── UI HELPERS ────────────────────────────────────────────
+function setStatus(s)    { const el=document.getElementById('statusPill'); el.textContent=s; el.className='status-pill'+(s!=='idle'?' '+s:''); }
+function wave(mode)      { const wf=document.getElementById('waveform'); wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':''); }
+function micState(s)     { document.getElementById('micBtn').className='mic-btn '+s; document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak'; }
+function bubble(who,txt) { const c=document.getElementById('chat'),d=document.createElement('div'); d.className='bubble '+who; d.innerHTML=`<div class="avatar">${who==='app'?'🎙':'👤'}</div><div class="btext">${txt}</div>`; c.appendChild(d); c.scrollTop=c.scrollHeight; }
+function appSays(t,fn)   { bubble('app',t); speak(t,fn); }
+function handleInput(t)  { if(!t.trim())return; bubble('user',t); route(intent(t)); }
+function sendText()      { const el=document.getElementById('textIn'),v=el.value.trim(); if(!v)return; el.value=''; handleInput(v); }
 </script>
 </body>
 </html>
