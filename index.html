@@ -6,11 +6,7 @@
   <title>Pulse — Your Daily News Buddy</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg:#0a0a0f;--surface:#13131a;--border:#1e1e2e;--text:#e8e8f0;
-      --muted:#5a5a7a;--accent:#7c6af7;--green:#6af7a0;
-      --font-display:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
-    }
+    :root{--bg:#0a0a0f;--surface:#13131a;--border:#1e1e2e;--text:#e8e8f0;--muted:#5a5a7a;--accent:#7c6af7;--green:#6af7a0;--font-display:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace}
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
     .app{width:100%;max-width:460px;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
@@ -27,7 +23,7 @@
     .big-title{font-family:var(--font-display);font-size:34px;font-weight:800;line-height:1.05;letter-spacing:-1px}
     .big-title span{color:var(--accent)}
     .sub{font-size:12px;color:var(--muted);line-height:1.7}
-    .key-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+    .key-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
     .key-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .2s}
     .key-input:focus{border-color:var(--accent)}
     .key-input::placeholder{color:var(--muted)}
@@ -39,7 +35,7 @@
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;align-self:center}
     @keyframes spin{to{transform:rotate(360deg)}}
     .load-title{font-family:var(--font-display);font-size:18px;font-weight:700;text-align:center}
-    .load-step{font-size:12px;color:var(--muted);min-height:18px;text-align:center}
+    .load-step{font-size:12px;color:var(--muted);min-height:18px;text-align:center;word-break:break-all}
     .load-bar-wrap{width:100%;height:4px;background:var(--border);border-radius:99px;overflow:hidden}
     .load-bar{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .4s ease}
     .cat-intro{font-family:var(--font-display);font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-.5px}
@@ -47,8 +43,10 @@
     .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
     .cat-btn{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-align:left}
     .cat-btn:hover{transform:translateY(-2px);border-color:var(--cat-color,var(--accent));box-shadow:0 6px 20px rgba(0,0,0,.3)}
+    .cat-btn.empty{opacity:.4;cursor:not-allowed}
     .cat-emoji{font-size:22px}
     .cat-label{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--cat-color,var(--text))}
+    .cat-count{font-size:10px;color:var(--muted)}
     .waveform{display:flex;align-items:center;justify-content:center;gap:4px;height:52px}
     .bar{width:3px;border-radius:99px;background:var(--accent);height:6px;opacity:.2;transition:background .3s}
     .waveform.active .bar{opacity:1;animation:wav .9s infinite ease-in-out}
@@ -82,6 +80,7 @@
     .send-btn{padding:10px 15px;background:var(--accent);border:none;border-radius:8px;color:white;cursor:pointer;font-size:16px}
     .restart-row{text-align:center}
     .restart-link{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+    .error-box{background:#2a1010;border:1px solid #f76a6a;border-radius:8px;padding:12px;font-size:11px;color:#f76a6a;line-height:1.6}
   </style>
 </head>
 <body>
@@ -95,17 +94,18 @@
   <!-- SCREEN 1: KEY -->
   <div class="screen active" id="s-key" style="padding:20px 0">
     <div class="big-title">Your news,<br><span>out loud.</span></div>
-    <p class="sub">Paste your free Groq API key — it stays in your browser only, never sent anywhere else.</p>
+    <p class="sub">Paste your free Groq API key — stays in your browser only.</p>
     <div>
-      <p class="key-label" style="margin-bottom:6px">Groq API Key</p>
+      <p class="key-label">Groq API Key</p>
       <input class="key-input" id="keyInput" type="password" placeholder="gsk_..." />
     </div>
-    <p class="key-note">Get a free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> → sign up → API Keys → Create. Takes 30 seconds.</p>
+    <p class="key-note">Free key → <a href="https://console.groq.com" target="_blank">console.groq.com</a> → sign up → API Keys → Create. 30 seconds.</p>
     <button class="go-btn" id="goBtn" onclick="startFetch()">Fetch Today's News →</button>
+    <div id="keyError" class="error-box" style="display:none"></div>
   </div>
 
   <!-- SCREEN 2: LOADING -->
-  <div class="screen" id="s-load" style="padding:32px 0;align-items:center">
+  <div class="screen" id="s-load" style="padding:32px 0;align-items:center;gap:16px">
     <div class="spinner"></div>
     <div class="load-title">Fetching your news...</div>
     <div class="load-step" id="loadStep">Starting up...</div>
@@ -139,128 +139,219 @@
 </div>
 
 <script>
-// ── CATEGORIES — add/remove freely ──────────────────────
+// ── CATEGORIES ────────────────────────────────
 const CATEGORIES = [
-  { id:"anime",   label:"Anime",      emoji:"🎌", color:"#f7a06a", rss:"https://www.animenewsnetwork.com/all/rss.xml",   topic:"anime and manga" },
-  { id:"f1",      label:"F1",         emoji:"🏎️", color:"#6af7f7", rss:"https://www.motorsport.com/rss/f1/news/",         topic:"Formula 1 racing" },
-  { id:"cricket", label:"Cricket",    emoji:"🏏", color:"#6af7a0", rss:"https://feeds.bbci.co.uk/sport/cricket/rss.xml",  topic:"cricket" },
-  { id:"tech",    label:"AI & Tech",  emoji:"💻", color:"#a06af7", rss:"https://techcrunch.com/feed/",                    topic:"AI and technology" },
-  { id:"world",   label:"World News", emoji:"🌍", color:"#f76a6a", rss:"https://feeds.bbci.co.uk/news/world/rss.xml",     topic:"world news" }
+  { id:"anime",   label:"Anime",      emoji:"🎌", color:"#f7a06a",
+    rss:"https://www.animenewsnetwork.com/all/rss.xml", topic:"anime and manga" },
+  { id:"f1",      label:"F1",         emoji:"🏎️", color:"#6af7f7",
+    rss:"https://www.motorsport.com/rss/f1/news/", topic:"Formula 1 racing" },
+  { id:"cricket", label:"Cricket",    emoji:"🏏", color:"#6af7a0",
+    rss:"https://feeds.bbci.co.uk/sport/cricket/rss.xml", topic:"cricket" },
+  { id:"tech",    label:"AI & Tech",  emoji:"💻", color:"#a06af7",
+    rss:"https://techcrunch.com/feed/", topic:"AI and technology" },
+  { id:"world",   label:"World News", emoji:"🌍", color:"#f76a6a",
+    rss:"https://feeds.bbci.co.uk/news/world/rss.xml", topic:"world news" }
 ];
 
-// ── STYLE — change to: "short" | "informative" | "fun" | "formal" ──
 const STYLE = "short";
 const STYLE_PROMPTS = {
   short:       "Casual, punchy, like texting a friend. Max 12 words per field.",
   informative: "Factual, include key names/dates/numbers. Max 18 words per field.",
-  fun:         "High energy, hype it up, like a YouTuber reacting. Max 12 words per field.",
+  fun:         "High energy, hype it up, like a YouTuber. Max 12 words per field.",
   formal:      "News anchor tone, neutral and clear. Max 15 words per field."
 };
 
 let GROQ_KEY = "";
 let newsData  = {};
 
-// ── SCREENS ──────────────────────────────────────────────
+// ── SCREENS ───────────────────────────────────
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 
-// ── FETCH + SUMMARIZE ─────────────────────────────────────
 function setStep(msg, pct) {
   document.getElementById("loadStep").textContent = msg;
   document.getElementById("loadBar").style.width  = pct + "%";
+  console.log(`[${pct}%] ${msg}`);
 }
 
+// ── RSS FETCH via allorigins CORS proxy ───────
 async function fetchRSS(url) {
-  const api = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&count=3`;
-  const res  = await fetch(api);
+  // allorigins is a free reliable CORS proxy
+  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+  console.log("Fetching RSS:", url);
+
+  const res  = await fetch(proxy);
   const data = await res.json();
-  return (data.items || []).slice(0,3).map(i => ({
-    title:   i.title || "",
-    summary: (i.description || i.content || "").replace(/<[^>]*>/g,"").slice(0,300)
+
+  if (!data.contents) throw new Error("Empty response from proxy");
+
+  // Parse XML with DOMParser
+  const parser = new DOMParser();
+  const xml    = parser.parseFromString(data.contents, "text/xml");
+  const items  = Array.from(xml.querySelectorAll("item")).slice(0, 3);
+
+  if (items.length === 0) throw new Error("No items found in RSS feed");
+
+  return items.map(item => ({
+    title:   item.querySelector("title")?.textContent?.trim() || "",
+    summary: (item.querySelector("description")?.textContent || "")
+               .replace(/<[^>]*>/g, "").trim().slice(0, 300)
   }));
 }
 
+// ── GROQ SUMMARIZE ────────────────────────────
 async function summarizeWithGroq(rawItems, catLabel, catTopic) {
-  const content = rawItems.map((r,i) => `[${i+1}] Title: ${r.title}\nSummary: ${r.summary}`).join("\n\n");
-  const prompt = `Summarize these ${catTopic} news items for a voice app. User HEARS this.
+  const content = rawItems.map((r, i) =>
+    `[${i+1}] Title: ${r.title}\nSummary: ${r.summary}`
+  ).join("\n\n");
+
+  const prompt = `Summarize these ${catTopic} news items for a voice app. The user HEARS this, not reads it.
 Style: ${STYLE_PROMPTS[STYLE]}
-Return ONLY a valid JSON array. Each object: "headline", "detail", "extra". No markdown, no extra text.
+Return ONLY a valid JSON array of objects. Each object must have exactly: "headline", "detail", "extra".
+- headline: what happened
+- detail: key fact (date, name, number)
+- extra: fun context or reaction
+NO markdown. NO extra text. ONLY the JSON array.
 
 ${content}`;
 
+  console.log("Calling Groq for:", catLabel);
+
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":`Bearer ${GROQ_KEY}`},
+    method: "POST",
+    headers: {
+      "Content-Type":  "application/json",
+      "Authorization": `Bearer ${GROQ_KEY}`
+    },
     body: JSON.stringify({
-      model:"llama3-8b-8192", max_tokens:600, temperature:0.7,
-      messages:[
-        {role:"system", content:"Return only valid JSON arrays. No explanation, no markdown."},
-        {role:"user",   content:prompt}
+      model:       "llama3-8b-8192",
+      max_tokens:  600,
+      temperature: 0.7,
+      messages: [
+        { role: "system", content: "You return ONLY valid JSON arrays. No explanation, no markdown, no extra text." },
+        { role: "user",   content: prompt }
       ]
     })
   });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Groq error ${res.status}: ${err}`);
+  }
+
   const data = await res.json();
-  let text = (data.choices?.[0]?.message?.content || "[]").trim().replace(/```json|```/g,"").trim();
-  try { return JSON.parse(text); }
-  catch { return rawItems.map(r => ({headline:r.title, detail:"", extra:""})); }
+  let text = (data.choices?.[0]?.message?.content || "[]").trim();
+  text = text.replace(/```json|```/g, "").trim();
+
+  console.log("Groq response for", catLabel, ":", text.slice(0, 200));
+
+  // Find JSON array in response
+  const startIdx = text.indexOf("[");
+  const endIdx   = text.lastIndexOf("]");
+  if (startIdx !== -1 && endIdx !== -1) {
+    text = text.slice(startIdx, endIdx + 1);
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch(e) {
+    console.error("JSON parse failed:", e, "Raw:", text);
+    return rawItems.map(r => ({ headline: r.title, detail: "", extra: "" }));
+  }
 }
 
+// ── MAIN FETCH ────────────────────────────────
 async function startFetch() {
   GROQ_KEY = document.getElementById("keyInput").value.trim();
-  if (!GROQ_KEY || !GROQ_KEY.startsWith("gsk_")) {
-    alert("Please enter a valid Groq API key (starts with gsk_)"); return;
+
+  if (!GROQ_KEY) {
+    showKeyError("Please paste your Groq API key first.");
+    return;
   }
-  document.getElementById("goBtn").disabled = true;
+  if (!GROQ_KEY.startsWith("gsk_")) {
+    showKeyError("Key should start with gsk_ — check you copied the full key.");
+    return;
+  }
+
+  document.getElementById("goBtn").disabled   = true;
+  document.getElementById("keyError").style.display = "none";
   show("s-load");
 
-  for (let i=0; i<CATEGORIES.length; i++) {
+  let anySuccess = false;
+
+  for (let i = 0; i < CATEGORIES.length; i++) {
     const cat = CATEGORIES[i];
-    setStep(`${cat.emoji} Fetching ${cat.label}...`, Math.round((i/CATEGORIES.length)*90));
+    const pct = Math.round((i / CATEGORIES.length) * 90);
+    setStep(`${cat.emoji} Fetching ${cat.label}...`, pct);
+
     try {
       const raw        = await fetchRSS(cat.rss);
+      console.log(`Got ${raw.length} items for ${cat.id}`);
+      setStep(`${cat.emoji} Summarizing ${cat.label} with AI...`, pct + 9);
       newsData[cat.id] = await summarizeWithGroq(raw, cat.label, cat.topic);
+      console.log(`Summarized ${newsData[cat.id].length} items for ${cat.id}`);
+      anySuccess = true;
     } catch(e) {
-      console.error(cat.id, e);
+      console.error(`Failed ${cat.id}:`, e.message);
       newsData[cat.id] = [];
+      setStep(`⚠️ ${cat.label} failed: ${e.message}`, pct + 9);
+      await new Promise(r => setTimeout(r, 800));
     }
   }
 
   setStep("Done! 🎉", 100);
   await new Promise(r => setTimeout(r, 500));
+
+  if (!anySuccess) {
+    show("s-key");
+    document.getElementById("goBtn").disabled = false;
+    showKeyError("All feeds failed to load. Check browser console (F12) for details. Try a different network or VPN.");
+    return;
+  }
+
   buildCategoryGrid();
   show("s-cat");
+}
+
+function showKeyError(msg) {
+  const el = document.getElementById("keyError");
+  el.textContent = msg;
+  el.style.display = "block";
 }
 
 function buildCategoryGrid() {
   const grid = document.getElementById("catGrid");
   grid.innerHTML = "";
   CATEGORIES.forEach(cat => {
-    const btn = document.createElement("button");
-    btn.className = "cat-btn";
+    const items = newsData[cat.id] || [];
+    const btn   = document.createElement("button");
+    btn.className = "cat-btn" + (items.length === 0 ? " empty" : "");
     btn.style.setProperty("--cat-color", cat.color);
-    btn.innerHTML = `<span class="cat-emoji">${cat.emoji}</span><span class="cat-label">${cat.label}</span>`;
-    btn.onclick = () => startConversation(cat.id);
+    btn.innerHTML = `
+      <span class="cat-emoji">${cat.emoji}</span>
+      <span class="cat-label">${cat.label}</span>
+      <span class="cat-count">${items.length > 0 ? items.length + " stories" : "unavailable"}</span>`;
+    if (items.length > 0) btn.onclick = () => startConversation(cat.id);
     grid.appendChild(btn);
   });
 }
 
-// ── STATE MACHINE ─────────────────────────────────────────
-const S = {IDLE:'idle', FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing'};
-let state=S.IDLE, currentCat=null, currentNews=null;
+// ── STATE MACHINE ─────────────────────────────
+const S = { FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing' };
+let state = S.FOLLOWUP, currentCat = null, currentNews = null;
 
 function startConversation(catId) {
-  currentCat = CATEGORIES.find(c => c.id===catId);
-  const items = newsData[catId]||[];
-  if (!items.length) { alert("No news loaded for this topic."); return; }
+  currentCat  = CATEGORIES.find(c => c.id === catId);
+  const items = newsData[catId] || [];
   show("s-conv");
   setTimeout(deliver, 350);
 }
 
 function deliver() {
   const items = newsData[currentCat.id];
-  currentNews = items[Math.floor(Math.random()*items.length)];
+  currentNews = items[Math.floor(Math.random() * items.length)];
   appSays(`Here's your ${currentCat.label} update —`, () => {
     setTimeout(() => {
       appSays(currentNews.headline, () => {
@@ -272,16 +363,17 @@ function deliver() {
 }
 
 function route(i) {
-  if (state===S.FOLLOWUP) {
-    if (i==='no') { closeConv(); return; }
-    appSays(currentNews.detail||"That's all I have on this!", () => {
+  if (state === S.FOLLOWUP) {
+    if (i === 'no') { closeConv(); return; }
+    const detail = currentNews.detail || "That's all I have on this!";
+    appSays(detail, () => {
       state = S.ANSWERING;
       setTimeout(() => appSays("Anything else?", () => micState('ready')), 500);
     });
-  } else if (state===S.ANSWERING) {
-    if (i==='no') { closeConv(); return; }
-    appSays(currentNews.extra||"That's everything!", () => setTimeout(closeConv, 400));
-  } else if (state===S.CLOSING) {
+  } else if (state === S.ANSWERING) {
+    if (i === 'no') { closeConv(); return; }
+    appSays(currentNews.extra || "That's everything I've got!", () => setTimeout(closeConv, 400));
+  } else if (state === S.CLOSING) {
     appSays("Hit ↺ start over to go again! 😄");
   }
 }
@@ -291,55 +383,55 @@ function closeConv() {
   appSays(`That's all for ${currentCat.label} today! 👋`);
 }
 
-// ── INTENT ────────────────────────────────────────────────
 function intent(t) {
   t = t.toLowerCase();
-  if (/\b(no|nah|nope|skip|done|bye|thanks|stop)\b/.test(t)) return 'no';
+  if (/\b(no|nah|nope|skip|done|bye|thanks|stop|that.?s all)\b/.test(t)) return 'no';
   return 'yes';
 }
 
-// ── TTS ───────────────────────────────────────────────────
+// ── TTS ───────────────────────────────────────
 const synth = window.speechSynthesis;
-let voices=[];
-function loadVoices(){voices=synth.getVoices()}
+let voices = [];
+function loadVoices() { voices = synth.getVoices(); }
 loadVoices();
-if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=loadVoices;
+if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
 
 function speak(text, onEnd) {
   synth.cancel();
   const utt = new SpeechSynthesisUtterance(text);
-  utt.rate=1.05; utt.pitch=1.05;
-  const pick = voices.find(v=>v.lang.startsWith('en')&&/female|zira|samantha|karen/i.test(v.name))
-            || voices.find(v=>v.lang.startsWith('en')) || voices[0];
-  if(pick) utt.voice=pick;
+  utt.rate = 1.05; utt.pitch = 1.05;
+  const pick = voices.find(v => v.lang.startsWith('en') && /female|zira|samantha|karen/i.test(v.name))
+            || voices.find(v => v.lang.startsWith('en')) || voices[0];
+  if (pick) utt.voice = pick;
   setStatus('speaking'); wave('active');
-  utt.onend=()=>{setStatus('idle');wave('off');if(onEnd)onEnd()};
+  utt.onend = () => { setStatus('idle'); wave('off'); if (onEnd) onEnd(); };
   synth.speak(utt);
 }
 
-// ── STT ───────────────────────────────────────────────────
-let recog=null, listening=false;
+// ── STT ───────────────────────────────────────
+let recog = null, listening = false;
 function buildRecog() {
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR) return null;
-  const r=new SR(); r.continuous=false; r.interimResults=false; r.lang='en-US';
-  r.onresult=e=>handleInput(e.results[0][0].transcript);
-  r.onend=()=>{listening=false;micState('ready');setStatus('idle');wave('off')};
-  r.onerror=()=>{listening=false;micState('ready')};
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.continuous = false; r.interimResults = false; r.lang = 'en-US';
+  r.onresult = e => handleInput(e.results[0][0].transcript);
+  r.onend    = () => { listening=false; micState('ready'); setStatus('idle'); wave('off'); };
+  r.onerror  = () => { listening=false; micState('ready'); };
   return r;
 }
-function startListen(){recog=buildRecog();if(!recog){document.getElementById('textIn').focus();return}recog.start();listening=true;micState('listening');setStatus('listening');wave('listening')}
-function stopListen(){if(recog)recog.stop();listening=false;micState('ready')}
-function toggleMic(){listening?stopListen():startListen()}
+function startListen()  { recog=buildRecog(); if(!recog){document.getElementById('textIn').focus();return} recog.start(); listening=true; micState('listening'); setStatus('listening'); wave('listening'); }
+function stopListen()   { if(recog) recog.stop(); listening=false; micState('ready'); }
+function toggleMic()    { listening ? stopListen() : startListen(); }
 
-// ── UI HELPERS ────────────────────────────────────────────
-function setStatus(s){const el=document.getElementById('statusPill');el.textContent=s;el.className='status-pill'+(s!=='idle'?' '+s:'')}
-function wave(mode){const wf=document.getElementById('waveform');wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':'')}
-function micState(s){document.getElementById('micBtn').className='mic-btn '+s;document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak'}
-function bubble(who,text){const chat=document.getElementById('chat');const d=document.createElement('div');d.className='bubble '+who;d.innerHTML=`<div class="avatar">${who==='app'?'🎙':'👤'}</div><div class="btext">${text}</div>`;chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
-function appSays(text,then){bubble('app',text);speak(text,then)}
-function handleInput(text){if(!text.trim())return;bubble('user',text);route(intent(text))}
-function sendText(){const el=document.getElementById('textIn');const v=el.value.trim();if(!v)return;el.value='';handleInput(v)}
+// ── UI HELPERS ────────────────────────────────
+function setStatus(s)   { const el=document.getElementById('statusPill'); el.textContent=s; el.className='status-pill'+(s!=='idle'?' '+s:''); }
+function wave(mode)     { const wf=document.getElementById('waveform'); wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':''); }
+function micState(s)    { document.getElementById('micBtn').className='mic-btn '+s; document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak'; }
+function bubble(who,text){ const chat=document.getElementById('chat'); const d=document.createElement('div'); d.className='bubble '+who; d.innerHTML=`<div class="avatar">${who==='app'?'🎙':'👤'}</div><div class="btext">${text}</div>`; chat.appendChild(d); chat.scrollTop=chat.scrollHeight; }
+function appSays(text,then){ bubble('app',text); speak(text,then); }
+function handleInput(text){ if(!text.trim()) return; bubble('user',text); route(intent(text)); }
+function sendText()     { const el=document.getElementById('textIn'); const v=el.value.trim(); if(!v) return; el.value=''; handleInput(v); }
 </script>
 </body>
 </html>
