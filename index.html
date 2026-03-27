@@ -238,31 +238,45 @@ function showError(msg) {
 
 // ── NEWSAPI via allorigins proxy ───────────────────────────
 async function fetchNews(query) {
-  const newsUrl   = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${NEWS_KEY}`;
-  const proxyUrl  = `https://api.allorigins.win/get?url=${encodeURIComponent(newsUrl)}`;
+  const newsUrl  = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${NEWS_KEY}`;
+  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(newsUrl)}`;
 
-  dlog("inf", `Calling proxy for: "${query}"`);
-  dlog("inf", `Proxy URL: ${proxyUrl.slice(0, 80)}...`);
+  dlog("inf", `Fetching: "${query}"`);
 
-  const res = await fetch(proxyUrl);
-  dlog("inf", `Proxy HTTP status: ${res.status}`);
+  // Retry up to 3 times on network failure
+  let res, lastErr;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      dlog("inf", `Attempt ${attempt}/3...`);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 12000); // 12s timeout
+      res = await fetch(proxyUrl, { signal: controller.signal });
+      clearTimeout(timer);
+      dlog("inf", `Proxy HTTP status: ${res.status}`);
+      break;
+    } catch(e) {
+      lastErr = e;
+      dlog("err", `Attempt ${attempt} failed: ${e.message}`);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  if (!res) throw new Error(`All 3 attempts failed: ${lastErr?.message}`);
 
   const raw = await res.json();
-  dlog("inf", `Proxy response keys: ${Object.keys(raw).join(", ")}`);
-
-  if (!raw.contents) throw new Error("Proxy returned no contents field");
+  dlog("inf", `Proxy keys: ${Object.keys(raw).join(", ")}`);
+  if (!raw.contents) throw new Error("Proxy returned no contents");
 
   let data;
   try {
     data = JSON.parse(raw.contents);
   } catch(e) {
-    dlog("err", `Failed to parse proxy contents as JSON: ${raw.contents.slice(0,100)}`);
+    dlog("err", `Bad JSON from proxy: ${raw.contents.slice(0,100)}`);
     throw new Error("Proxy contents not valid JSON");
   }
 
-  dlog("inf", `NewsAPI status: ${data.status}, totalResults: ${data.totalResults}`);
+  dlog("inf", `NewsAPI status: ${data.status}, results: ${data.totalResults}`);
   if (data.status !== "ok") {
-    dlog("err", `NewsAPI error: ${data.message}`);
+    dlog("err", `NewsAPI said: ${data.message}`);
     throw new Error(data.message || "NewsAPI error");
   }
   if (!data.articles?.length) throw new Error("No articles returned");
@@ -285,7 +299,7 @@ async function summarizeWithGroq(rawItems, catLabel, catTopic) {
     method: "POST",
     headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
     body: JSON.stringify({
-      model: "llama3-8b-8192", max_tokens: 600, temperature: 0.7,
+      model: "llama-3.1-8b-instant", max_tokens: 600, temperature: 0.7,
       messages: [
         { role: "system", content: "You return ONLY valid JSON arrays. No explanation, no markdown." },
         { role: "user",   content: `Summarize these ${catTopic} news items for a voice app.\nStyle: ${STYLE_PROMPTS[STYLE]}\nReturn ONLY a JSON array with fields: "headline", "detail", "extra"\n\n${content}` }
