@@ -6,7 +6,7 @@
   <title>Pulse — Your Daily News Buddy</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
   <style>
-    :root{--bg:#0a0a0f;--surface:#13131a;--border:#1e1e2e;--text:#e8e8f0;--muted:#5a5a7a;--accent:#7c6af7;--green:#6af7a0;--font-display:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace}
+    :root{--bg:#0a0a0f;--surface:#13131a;--border:#1e1e2e;--text:#e8e8f0;--muted:#5a5a7a;--accent:#7c6af7;--green:#6af7a0;--red:#f76a6a;--font-display:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace}
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
     .app{width:100%;max-width:460px;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
@@ -80,9 +80,20 @@
     .send-btn{padding:10px 15px;background:var(--accent);border:none;border-radius:8px;color:white;cursor:pointer;font-size:16px}
     .restart-row{text-align:center}
     .restart-link{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-    .error-box{background:#2a1010;border:1px solid #f76a6a;border-radius:8px;padding:12px;font-size:11px;color:#f76a6a;line-height:1.6;display:none}
+    .error-box{background:#2a1010;border:1px solid var(--red);border-radius:8px;padding:12px;font-size:11px;color:var(--red);line-height:1.6;display:none}
     .divider{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:10px}
     .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* ── DEBUG BOX ── */
+    .debug-wrap{margin-top:4px}
+    .debug-toggle{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;background:none;border:none;padding:0;font-family:var(--font-mono)}
+    .debug-box{margin-top:8px;background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;display:none}
+    .debug-box pre{font-size:10px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:#8b8b9e}
+    .debug-box pre .ok  {color:var(--green)}
+    .debug-box pre .err {color:var(--red)}
+    .debug-box pre .inf {color:var(--accent)}
+    .copy-btn{margin-top:6px;font-size:10px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-family:var(--font-mono)}
+    .copy-btn:hover{color:var(--text)}
   </style>
 </head>
 <body>
@@ -110,6 +121,15 @@
     <p class="key-note">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
     <button class="go-btn" id="goBtn" onclick="startFetch()">Fetch Today's News →</button>
     <div class="error-box" id="keyError"></div>
+
+    <!-- DEBUG PANEL -->
+    <div class="debug-wrap" id="debugWrap" style="display:none">
+      <button class="debug-toggle" onclick="toggleDebug()">▶ show debug log</button>
+      <div class="debug-box" id="debugBox">
+        <pre id="debugLog"></pre>
+        <button class="copy-btn" onclick="copyDebug()">📋 Copy log to clipboard</button>
+      </div>
+    </div>
   </div>
 
   <!-- SCREEN 2: LOADING -->
@@ -165,7 +185,40 @@ const STYLE_PROMPTS = {
 
 let NEWS_KEY = "", GROQ_KEY = "";
 let newsData = {};
+let debugLines = [];
 
+// ── DEBUG ──────────────────────────────────────────────────
+function dlog(type, msg) {
+  const ts   = new Date().toISOString().slice(11,19);
+  const line = `[${ts}] ${type.toUpperCase()}: ${msg}`;
+  debugLines.push(line);
+  const pre  = document.getElementById("debugLog");
+  const span = document.createElement("span");
+  span.className = type === "ok" ? "ok" : type === "err" ? "err" : "inf";
+  span.textContent = line + "\n";
+  pre.appendChild(span);
+  const box = document.getElementById("debugBox");
+  box.scrollTop = box.scrollHeight;
+}
+
+function toggleDebug() {
+  const box = document.getElementById("debugBox");
+  const btn = document.querySelector(".debug-toggle");
+  const open = box.style.display === "block";
+  box.style.display = open ? "none" : "block";
+  btn.textContent   = (open ? "▶" : "▼") + " show debug log";
+}
+
+function copyDebug() {
+  const text = debugLines.join("\n");
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(".copy-btn");
+    btn.textContent = "✅ Copied!";
+    setTimeout(() => btn.textContent = "📋 Copy log to clipboard", 2000);
+  });
+}
+
+// ── SCREENS ────────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -178,95 +231,108 @@ function showError(msg) {
   const el = document.getElementById("keyError");
   el.textContent = msg;
   el.style.display = "block";
+  document.getElementById("debugWrap").style.display = "block";
 }
 
-// ── NEWSAPI via allorigins proxy (bypasses browser CORS block) ──
+// ── NEWSAPI via allorigins proxy ───────────────────────────
 async function fetchNews(query) {
-  const newsUrl = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${NEWS_KEY}`;
-  const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(newsUrl)}`;
+  const newsUrl   = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${NEWS_KEY}`;
+  const proxyUrl  = `https://api.allorigins.win/get?url=${encodeURIComponent(newsUrl)}`;
 
-  const res  = await fetch(proxyUrl);
-  const raw  = await res.json();
+  dlog("inf", `Calling proxy for: "${query}"`);
+  dlog("inf", `Proxy URL: ${proxyUrl.slice(0, 80)}...`);
 
-  if (!raw.contents) throw new Error("Proxy returned empty response");
+  const res = await fetch(proxyUrl);
+  dlog("inf", `Proxy HTTP status: ${res.status}`);
 
-  const data = JSON.parse(raw.contents);
+  const raw = await res.json();
+  dlog("inf", `Proxy response keys: ${Object.keys(raw).join(", ")}`);
 
-  if (data.status !== "ok") throw new Error(data.message || "NewsAPI error");
-  if (!data.articles?.length) throw new Error("No articles found");
+  if (!raw.contents) throw new Error("Proxy returned no contents field");
 
+  let data;
+  try {
+    data = JSON.parse(raw.contents);
+  } catch(e) {
+    dlog("err", `Failed to parse proxy contents as JSON: ${raw.contents.slice(0,100)}`);
+    throw new Error("Proxy contents not valid JSON");
+  }
+
+  dlog("inf", `NewsAPI status: ${data.status}, totalResults: ${data.totalResults}`);
+  if (data.status !== "ok") {
+    dlog("err", `NewsAPI error: ${data.message}`);
+    throw new Error(data.message || "NewsAPI error");
+  }
+  if (!data.articles?.length) throw new Error("No articles returned");
+
+  dlog("ok", `Got ${data.articles.length} articles`);
   return data.articles.slice(0, 3).map(a => ({
     title:   a.title || "",
     summary: (a.description || a.content || "").replace(/<[^>]*>/g, "").slice(0, 300)
   }));
 }
 
-// ── GROQ SUMMARIZE ──
+// ── GROQ SUMMARIZE ─────────────────────────────────────────
 async function summarizeWithGroq(rawItems, catLabel, catTopic) {
+  dlog("inf", `Calling Groq for: ${catLabel}`);
   const content = rawItems
     .map((r, i) => `[${i+1}] Title: ${r.title}\nSummary: ${r.summary}`)
     .join("\n\n");
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type":  "application/json",
-      "Authorization": `Bearer ${GROQ_KEY}`
-    },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
     body: JSON.stringify({
-      model: "llama3-8b-8192",
-      max_tokens: 600,
-      temperature: 0.7,
+      model: "llama3-8b-8192", max_tokens: 600, temperature: 0.7,
       messages: [
-        {
-          role: "system",
-          content: "You return ONLY valid JSON arrays. No explanation, no markdown, no extra text whatsoever."
-        },
-        {
-          role: "user",
-          content: `Summarize these ${catTopic} news items for a voice app. User HEARS this, not reads it.
-Style: ${STYLE_PROMPTS[STYLE]}
-Return ONLY a JSON array. Each object must have exactly: "headline", "detail", "extra"
-- headline: what happened (punchy, heard first)
-- detail:   key fact — date, name, number (heard if user asks more)
-- extra:    fun reaction or context (heard last)
-
-${content}`
-        }
+        { role: "system", content: "You return ONLY valid JSON arrays. No explanation, no markdown." },
+        { role: "user",   content: `Summarize these ${catTopic} news items for a voice app.\nStyle: ${STYLE_PROMPTS[STYLE]}\nReturn ONLY a JSON array with fields: "headline", "detail", "extra"\n\n${content}` }
       ]
     })
   });
 
+  dlog("inf", `Groq HTTP status: ${res.status}`);
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Groq ${res.status}: ${err.slice(0, 100)}`);
+    dlog("err", `Groq error body: ${err.slice(0, 150)}`);
+    throw new Error(`Groq ${res.status}`);
   }
 
   const data = await res.json();
   let text = (data.choices?.[0]?.message?.content || "[]").trim();
   text = text.replace(/```json|```/g, "").trim();
-
   const start = text.indexOf("["), end = text.lastIndexOf("]");
   if (start !== -1 && end !== -1) text = text.slice(start, end + 1);
 
+  dlog("ok", `Groq response preview: ${text.slice(0, 80)}...`);
+
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    dlog("ok", `Parsed ${parsed.length} items for ${catLabel}`);
+    return parsed;
   } catch {
+    dlog("err", `JSON parse failed, using raw titles as fallback`);
     return rawItems.map(r => ({ headline: r.title, detail: "", extra: "" }));
   }
 }
 
-// ── MAIN FLOW ──
+// ── MAIN FLOW ──────────────────────────────────────────────
 async function startFetch() {
   NEWS_KEY = document.getElementById("newsKey").value.trim();
   GROQ_KEY = document.getElementById("groqKey").value.trim();
   document.getElementById("keyError").style.display = "none";
+  document.getElementById("debugLog").innerHTML = "";
+  debugLines = [];
 
   if (!NEWS_KEY)  { showError("Please paste your NewsAPI key."); return; }
   if (!GROQ_KEY || !GROQ_KEY.startsWith("gsk_")) { showError("Please paste your Groq key (starts with gsk_)."); return; }
 
   document.getElementById("goBtn").disabled = true;
   show("s-load");
+
+  dlog("inf", `Starting fetch — ${CATEGORIES.length} categories`);
+  dlog("inf", `NewsAPI key starts with: ${NEWS_KEY.slice(0,6)}...`);
+  dlog("inf", `Groq key starts with: ${GROQ_KEY.slice(0,8)}...`);
 
   let anySuccess = false;
 
@@ -276,25 +342,29 @@ async function startFetch() {
 
     try {
       setStep(`${cat.emoji} Fetching ${cat.label}...`, pct);
+      dlog("inf", `--- ${cat.label} ---`);
       const raw = await fetchNews(cat.q);
 
       setStep(`${cat.emoji} Summarizing ${cat.label} with AI...`, pct + 8);
       newsData[cat.id] = await summarizeWithGroq(raw, cat.label, cat.id);
-
       anySuccess = true;
     } catch(e) {
-      console.error(cat.id, e.message);
+      dlog("err", `${cat.id} FAILED: ${e.message}`);
       newsData[cat.id] = [];
     }
   }
 
+  dlog(anySuccess ? "ok" : "err", `Done. Success: ${anySuccess}`);
   setStep("Done! 🎉", 100);
   await new Promise(r => setTimeout(r, 500));
 
   if (!anySuccess) {
     show("s-key");
     document.getElementById("goBtn").disabled = false;
-    showError("All feeds failed. Check your NewsAPI key and try again.");
+    showError("All feeds failed. See debug log below ↓ — copy and share it.");
+    document.getElementById("debugWrap").style.display = "block";
+    document.getElementById("debugBox").style.display  = "block";
+    document.querySelector(".debug-toggle").textContent = "▼ show debug log";
     return;
   }
 
@@ -302,6 +372,7 @@ async function startFetch() {
   show("s-cat");
 }
 
+// ── CATEGORY GRID ──────────────────────────────────────────
 function buildCategoryGrid() {
   const grid = document.getElementById("catGrid");
   grid.innerHTML = "";
@@ -319,7 +390,7 @@ function buildCategoryGrid() {
   });
 }
 
-// ── STATE MACHINE ──
+// ── STATE MACHINE ──────────────────────────────────────────
 const S = { FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing' };
 let state = S.FOLLOWUP, currentCat = null, currentNews = null;
 
@@ -328,7 +399,6 @@ function startConversation(catId) {
   show("s-conv");
   setTimeout(deliver, 350);
 }
-
 function deliver() {
   const items = newsData[currentCat.id];
   currentNews = items[Math.floor(Math.random() * items.length)];
@@ -341,7 +411,6 @@ function deliver() {
     }, 250);
   });
 }
-
 function route(i) {
   if (state === S.FOLLOWUP) {
     if (i === 'no') { closeConv(); return; }
@@ -356,25 +425,15 @@ function route(i) {
     appSays("Hit ↺ start over to go again! 😄");
   }
 }
+function closeConv() { state = S.CLOSING; appSays(`That's all for ${currentCat.label} today! 👋`); }
+function intent(t)   { t=t.toLowerCase(); if(/\b(no|nah|nope|skip|done|bye|thanks|stop|that.?s all)\b/.test(t))return'no'; return'yes'; }
 
-function closeConv() {
-  state = S.CLOSING;
-  appSays(`That's all for ${currentCat.label} today! 👋`);
-}
-
-function intent(t) {
-  t = t.toLowerCase();
-  if (/\b(no|nah|nope|skip|done|bye|thanks|stop|that.?s all)\b/.test(t)) return 'no';
-  return 'yes';
-}
-
-// ── TTS ──
+// ── TTS ────────────────────────────────────────────────────
 const synth = window.speechSynthesis;
 let voices = [];
 function loadVoices() { voices = synth.getVoices(); }
 loadVoices();
 if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
-
 function speak(text, onEnd) {
   synth.cancel();
   const utt = new SpeechSynthesisUtterance(text);
@@ -387,7 +446,7 @@ function speak(text, onEnd) {
   synth.speak(utt);
 }
 
-// ── STT ──
+// ── STT ────────────────────────────────────────────────────
 let recog = null, listening = false;
 function buildRecog() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -403,7 +462,7 @@ function startListen() { recog=buildRecog(); if(!recog){document.getElementById(
 function stopListen()  { if(recog) recog.stop(); listening=false; micState('ready'); }
 function toggleMic()   { listening ? stopListen() : startListen(); }
 
-// ── UI HELPERS ──
+// ── UI HELPERS ─────────────────────────────────────────────
 function setStatus(s)    { const el=document.getElementById('statusPill'); el.textContent=s; el.className='status-pill'+(s!=='idle'?' '+s:''); }
 function wave(mode)      { const wf=document.getElementById('waveform'); wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':''); }
 function micState(s)     { document.getElementById('micBtn').className='mic-btn '+s; document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak'; }
