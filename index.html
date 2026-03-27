@@ -23,12 +23,6 @@
     .big-title{font-family:var(--font-display);font-size:34px;font-weight:800;line-height:1.05;letter-spacing:-1px}
     .big-title span{color:var(--accent)}
     .sub{font-size:12px;color:var(--muted);line-height:1.7}
-    .field-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-    .key-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .2s}
-    .key-input:focus{border-color:var(--accent)}
-    .key-input::placeholder{color:var(--muted)}
-    .key-note{font-size:10px;color:var(--muted);line-height:1.6}
-    .key-note a{color:var(--accent);text-decoration:none}
     .go-btn{padding:13px;background:var(--accent);border:none;border-radius:99px;color:white;font-family:var(--font-mono);font-size:13px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:all .2s}
     .go-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,106,247,.3)}
     .go-btn:disabled{opacity:.4;transform:none;cursor:not-allowed}
@@ -80,20 +74,6 @@
     .send-btn{padding:10px 15px;background:var(--accent);border:none;border-radius:8px;color:white;cursor:pointer;font-size:16px}
     .restart-row{text-align:center}
     .restart-link{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-    .error-box{background:#2a1010;border:1px solid var(--red);border-radius:8px;padding:12px;font-size:11px;color:var(--red);line-height:1.6;display:none}
-    .divider{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:10px}
-    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-
-    /* ── DEBUG BOX ── */
-    .debug-wrap{margin-top:4px}
-    .debug-toggle{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px;background:none;border:none;padding:0;font-family:var(--font-mono)}
-    .debug-box{margin-top:8px;background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:10px;max-height:180px;overflow-y:auto;display:none}
-    .debug-box pre{font-size:10px;line-height:1.7;white-space:pre-wrap;word-break:break-all;color:#8b8b9e}
-    .debug-box pre .ok  {color:var(--green)}
-    .debug-box pre .err {color:var(--red)}
-    .debug-box pre .inf {color:var(--accent)}
-    .copy-btn{margin-top:6px;font-size:10px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-family:var(--font-mono)}
-    .copy-btn:hover{color:var(--text)}
   </style>
 </head>
 <body>
@@ -104,43 +84,22 @@
     <div class="status-pill" id="statusPill">idle</div>
   </div>
 
-  <!-- SCREEN 1: KEYS -->
-  <div class="screen active" id="s-key" style="padding:16px 0">
+  <!-- SCREEN 1: START -->
+  <div class="screen active" id="s-start" style="padding:20px 0;align-items:center;text-align:center;gap:20px">
     <div class="big-title">Your news,<br><span>out loud.</span></div>
-    <p class="sub">Two free keys — that's all you need.</p>
-    <div>
-      <p class="field-label">NewsAPI Key</p>
-      <input class="key-input" id="newsKey" type="password" placeholder="Paste NewsAPI key..." />
-    </div>
-    <p class="key-note">Free at <a href="https://newsapi.org/register" target="_blank">newsapi.org/register</a></p>
-    <div class="divider">and</div>
-    <div>
-      <p class="field-label">Groq API Key</p>
-      <input class="key-input" id="groqKey" type="password" placeholder="gsk_..." />
-    </div>
-    <p class="key-note">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
-    <button class="go-btn" id="goBtn" onclick="startFetch()">Fetch Today's News →</button>
-    <div class="error-box" id="keyError"></div>
-
-    <!-- DEBUG PANEL -->
-    <div class="debug-wrap" id="debugWrap" style="display:none">
-      <button class="debug-toggle" onclick="toggleDebug()">▶ show debug log</button>
-      <div class="debug-box" id="debugBox">
-        <pre id="debugLog"></pre>
-        <button class="copy-btn" onclick="copyDebug()">📋 Copy log to clipboard</button>
-      </div>
-    </div>
+    <p style="font-size:12px;color:var(--muted);line-height:1.7">Fresh AI-summarized news, just for you.</p>
+    <button class="go-btn" onclick="startFetch()">Fetch Today's News →</button>
   </div>
 
-  <!-- SCREEN 2: LOADING -->
-  <div class="screen" id="s-load" style="padding:32px 0;align-items:center;gap:16px">
+  <!-- SCREEN 2: LOADING + LIVE DEBUG -->
+  <div class="screen" id="s-load" style="padding:20px 0;align-items:center;gap:14px">
     <div class="spinner"></div>
     <div class="load-title">Fetching your news...</div>
     <div class="load-step" id="loadStep">Starting up...</div>
     <div class="load-bar-wrap" style="width:100%"><div class="load-bar" id="loadBar"></div></div>
-    <!-- LIVE DEBUG — always visible during load -->
-    <div id="debugBox" style="width:100%;background:#0d1117;border:1px solid #1e1e2e;border-radius:8px;padding:10px;max-height:220px;overflow-y:auto">
-      <pre id="debugLog" style="font-size:10px;line-height:1.8;white-space:pre-wrap;word-break:break-all;color:#5a5a7a">Waiting to start...\n</pre>
+    <!-- SINGLE debug box — no duplicates -->
+    <div id="debugBox" style="width:100%;background:#0d1117;border:1px solid #1e1e2e;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto">
+      <pre id="debugLog" style="font-size:10px;line-height:1.8;white-space:pre-wrap;word-break:break-all"></pre>
     </div>
   </div>
 
@@ -171,6 +130,11 @@
 </div>
 
 <script>
+// ── KEYS — embedded directly ──────────────────────────────
+const NEWS_KEY = "4762caafcf2e40b6a93462050e1c64f3";
+const GROQ_KEY = "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";
+
+// ── CATEGORIES ────────────────────────────────────────────
 const CATEGORIES = [
   { id:"anime",   label:"Anime",      emoji:"🎌", color:"#f7a06a", q:"anime OR manga OR crunchyroll" },
   { id:"f1",      label:"F1",         emoji:"🏎️", color:"#6af7f7", q:"Formula 1 OR F1 racing OR grand prix" },
@@ -187,40 +151,20 @@ const STYLE_PROMPTS = {
   formal:      "News anchor tone, neutral and clear. Max 15 words per field."
 };
 
-let NEWS_KEY = "", GROQ_KEY = "";
 let newsData = {};
-let debugLines = [];
 
-// ── DEBUG ──────────────────────────────────────────────────
+// ── DEBUG — single source of truth ───────────────────────
 function dlog(type, msg) {
   const ts    = new Date().toISOString().slice(11,19);
   const line  = `[${ts}] ${type.toUpperCase()}: ${msg}`;
-  debugLines.push(line);
-  const color = type==="ok" ? "#6af7a0" : type==="err" ? "#f76a6a" : "#7c6af7";
+  const color = type==="ok"?"#6af7a0":type==="err"?"#f76a6a":"#7c6af7";
   const pre   = document.getElementById("debugLog");
   if (pre) pre.innerHTML += `<span style="color:${color}">${line}\n</span>`;
   const box   = document.getElementById("debugBox");
   if (box) box.scrollTop = box.scrollHeight;
 }
 
-function toggleDebug() {
-  const box = document.getElementById("debugBox");
-  const btn = document.querySelector(".debug-toggle");
-  const open = box.style.display === "block";
-  box.style.display = open ? "none" : "block";
-  btn.textContent   = (open ? "▶" : "▼") + " show debug log";
-}
-
-function copyDebug() {
-  const text = debugLines.join("\n");
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector(".copy-btn");
-    btn.textContent = "✅ Copied!";
-    setTimeout(() => btn.textContent = "📋 Copy log to clipboard", 2000);
-  });
-}
-
-// ── SCREENS ────────────────────────────────────────────────
+// ── SCREENS ───────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -229,139 +173,106 @@ function setStep(msg, pct) {
   document.getElementById("loadStep").textContent = msg;
   document.getElementById("loadBar").style.width  = pct + "%";
 }
-function showError(msg) {
-  const el = document.getElementById("keyError");
-  el.textContent = msg;
-  el.style.display = "block";
-  document.getElementById("debugWrap").style.display = "block";
-}
 
-// ── NEWSAPI via allorigins proxy ───────────────────────────
+// ── NEWSAPI via allorigins proxy ──────────────────────────
 async function fetchNews(query) {
   const newsUrl  = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=3&apiKey=${NEWS_KEY}`;
   const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(newsUrl)}`;
 
   dlog("inf", `Fetching: "${query}"`);
 
-  // Retry up to 3 times on network failure
   let res, lastErr;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       dlog("inf", `Attempt ${attempt}/3...`);
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 12000); // 12s timeout
+      const timer = setTimeout(() => controller.abort(), 15000);
       res = await fetch(proxyUrl, { signal: controller.signal });
       clearTimeout(timer);
-      dlog("inf", `Proxy HTTP status: ${res.status}`);
+      dlog("inf", `Proxy status: ${res.status}`);
       break;
     } catch(e) {
       lastErr = e;
       dlog("err", `Attempt ${attempt} failed: ${e.message}`);
-      if (attempt < 3) await new Promise(r => setTimeout(r, 1500));
+      if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
     }
   }
-  if (!res) throw new Error(`All 3 attempts failed: ${lastErr?.message}`);
+  if (!res) throw new Error(`All attempts failed: ${lastErr?.message}`);
 
   const raw = await res.json();
-  dlog("inf", `Proxy keys: ${Object.keys(raw).join(", ")}`);
   if (!raw.contents) throw new Error("Proxy returned no contents");
 
   let data;
-  try {
-    data = JSON.parse(raw.contents);
-  } catch(e) {
-    dlog("err", `Bad JSON from proxy: ${raw.contents.slice(0,100)}`);
-    throw new Error("Proxy contents not valid JSON");
-  }
+  try { data = JSON.parse(raw.contents); }
+  catch(e) { throw new Error(`Bad JSON: ${raw.contents.slice(0,80)}`); }
 
-  dlog("inf", `NewsAPI status: ${data.status}, results: ${data.totalResults}`);
-  if (data.status !== "ok") {
-    dlog("err", `NewsAPI said: ${data.message}`);
-    throw new Error(data.message || "NewsAPI error");
-  }
+  dlog("inf", `NewsAPI: ${data.status}, results: ${data.totalResults}`);
+  if (data.status !== "ok") throw new Error(data.message || "NewsAPI error");
   if (!data.articles?.length) throw new Error("No articles returned");
 
   dlog("ok", `Got ${data.articles.length} articles`);
   return data.articles.slice(0, 3).map(a => ({
     title:   a.title || "",
-    summary: (a.description || a.content || "").replace(/<[^>]*>/g, "").slice(0, 300)
+    summary: (a.description || a.content || "").replace(/<[^>]*>/g,"").slice(0,300)
   }));
 }
 
-// ── GROQ SUMMARIZE ─────────────────────────────────────────
+// ── GROQ SUMMARIZE ────────────────────────────────────────
 async function summarizeWithGroq(rawItems, catLabel, catTopic) {
-  dlog("inf", `Calling Groq for: ${catLabel}`);
-  const content = rawItems
-    .map((r, i) => `[${i+1}] Title: ${r.title}\nSummary: ${r.summary}`)
-    .join("\n\n");
+  dlog("inf", `Groq summarizing: ${catLabel}`);
+  const content = rawItems.map((r,i) => `[${i+1}] Title: ${r.title}\nSummary: ${r.summary}`).join("\n\n");
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_KEY}` },
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":`Bearer ${GROQ_KEY}`},
     body: JSON.stringify({
-      model: "llama-3.1-8b-instant", max_tokens: 600, temperature: 0.7,
-      messages: [
-        { role: "system", content: "You return ONLY valid JSON arrays. No explanation, no markdown." },
-        { role: "user",   content: `Summarize these ${catTopic} news items for a voice app.\nStyle: ${STYLE_PROMPTS[STYLE]}\nReturn ONLY a JSON array with fields: "headline", "detail", "extra"\n\n${content}` }
+      model:"llama-3.1-8b-instant", max_tokens:600, temperature:0.7,
+      messages:[
+        {role:"system", content:"Return ONLY a valid JSON array. No markdown, no explanation."},
+        {role:"user",   content:`Summarize these ${catTopic} news for a voice app. User HEARS this.\nStyle: ${STYLE_PROMPTS[STYLE]}\nReturn JSON array with fields: "headline","detail","extra"\n\n${content}`}
       ]
     })
   });
 
-  dlog("inf", `Groq HTTP status: ${res.status}`);
+  dlog("inf", `Groq status: ${res.status}`);
   if (!res.ok) {
     const err = await res.text();
-    dlog("err", `Groq error body: ${err.slice(0, 150)}`);
+    dlog("err", `Groq error: ${err.slice(0,150)}`);
     throw new Error(`Groq ${res.status}`);
   }
 
-  const data = await res.json();
-  let text = (data.choices?.[0]?.message?.content || "[]").trim();
-  text = text.replace(/```json|```/g, "").trim();
+  const data  = await res.json();
+  let   text  = (data.choices?.[0]?.message?.content||"[]").trim().replace(/```json|```/g,"").trim();
   const start = text.indexOf("["), end = text.lastIndexOf("]");
-  if (start !== -1 && end !== -1) text = text.slice(start, end + 1);
-
-  dlog("ok", `Groq response preview: ${text.slice(0, 80)}...`);
+  if (start!==-1 && end!==-1) text = text.slice(start, end+1);
 
   try {
     const parsed = JSON.parse(text);
-    dlog("ok", `Parsed ${parsed.length} items for ${catLabel}`);
+    dlog("ok", `Groq done — ${parsed.length} items for ${catLabel}`);
     return parsed;
   } catch {
-    dlog("err", `JSON parse failed, using raw titles as fallback`);
-    return rawItems.map(r => ({ headline: r.title, detail: "", extra: "" }));
+    dlog("err", "JSON parse failed — using raw titles");
+    return rawItems.map(r => ({headline:r.title, detail:"", extra:""}));
   }
 }
 
-// ── MAIN FLOW ──────────────────────────────────────────────
+// ── MAIN FLOW ─────────────────────────────────────────────
 async function startFetch() {
-  NEWS_KEY = document.getElementById("newsKey").value.trim();
-  GROQ_KEY = document.getElementById("groqKey").value.trim();
-  document.getElementById("keyError").style.display = "none";
   document.getElementById("debugLog").innerHTML = "";
-  debugLines = [];
-
-  if (!NEWS_KEY)  { showError("Please paste your NewsAPI key."); return; }
-  if (!GROQ_KEY || !GROQ_KEY.startsWith("gsk_")) { showError("Please paste your Groq key (starts with gsk_)."); return; }
-
-  document.getElementById("goBtn").disabled = true;
   show("s-load");
 
-  dlog("inf", `Starting fetch — ${CATEGORIES.length} categories`);
-  dlog("inf", `NewsAPI key starts with: ${NEWS_KEY.slice(0,6)}...`);
-  dlog("inf", `Groq key starts with: ${GROQ_KEY.slice(0,8)}...`);
+  dlog("inf", `Starting — ${CATEGORIES.length} categories`);
 
   let anySuccess = false;
 
-  for (let i = 0; i < CATEGORIES.length; i++) {
+  for (let i=0; i<CATEGORIES.length; i++) {
     const cat = CATEGORIES[i];
-    const pct = Math.round((i / CATEGORIES.length) * 90);
-
+    const pct = Math.round((i/CATEGORIES.length)*90);
     try {
       setStep(`${cat.emoji} Fetching ${cat.label}...`, pct);
       dlog("inf", `--- ${cat.label} ---`);
       const raw = await fetchNews(cat.q);
-
-      setStep(`${cat.emoji} Summarizing ${cat.label} with AI...`, pct + 8);
+      setStep(`${cat.emoji} Summarizing ${cat.label}...`, pct+8);
       newsData[cat.id] = await summarizeWithGroq(raw, cat.label, cat.id);
       anySuccess = true;
     } catch(e) {
@@ -370,17 +281,13 @@ async function startFetch() {
     }
   }
 
-  dlog(anySuccess ? "ok" : "err", `Done. Success: ${anySuccess}`);
+  dlog(anySuccess?"ok":"err", `Done. anySuccess=${anySuccess}`);
   setStep("Done! 🎉", 100);
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r,600));
 
   if (!anySuccess) {
-    show("s-key");
-    document.getElementById("goBtn").disabled = false;
-    showError("All feeds failed. See debug log below ↓ — copy and share it.");
-    document.getElementById("debugWrap").style.display = "block";
-    document.getElementById("debugBox").style.display  = "block";
-    document.querySelector(".debug-toggle").textContent = "▼ show debug log";
+    dlog("err", "No categories loaded — staying on debug screen");
+    setStep("❌ All failed. See log above.", 100);
     return;
   }
 
@@ -388,104 +295,99 @@ async function startFetch() {
   show("s-cat");
 }
 
-// ── CATEGORY GRID ──────────────────────────────────────────
+// ── CATEGORY GRID ─────────────────────────────────────────
 function buildCategoryGrid() {
   const grid = document.getElementById("catGrid");
   grid.innerHTML = "";
   CATEGORIES.forEach(cat => {
-    const items = newsData[cat.id] || [];
+    const items = newsData[cat.id]||[];
     const btn   = document.createElement("button");
-    btn.className = "cat-btn" + (items.length === 0 ? " empty" : "");
+    btn.className = "cat-btn"+(items.length===0?" empty":"");
     btn.style.setProperty("--cat-color", cat.color);
-    btn.innerHTML = `
-      <span class="cat-emoji">${cat.emoji}</span>
-      <span class="cat-label">${cat.label}</span>
-      <span class="cat-count">${items.length > 0 ? items.length + " stories" : "unavailable"}</span>`;
-    if (items.length > 0) btn.onclick = () => startConversation(cat.id);
+    btn.innerHTML = `<span class="cat-emoji">${cat.emoji}</span><span class="cat-label">${cat.label}</span><span class="cat-count">${items.length>0?items.length+" stories":"unavailable"}</span>`;
+    if (items.length>0) btn.onclick = ()=>startConversation(cat.id);
     grid.appendChild(btn);
   });
 }
 
-// ── STATE MACHINE ──────────────────────────────────────────
-const S = { FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing' };
-let state = S.FOLLOWUP, currentCat = null, currentNews = null;
+// ── STATE MACHINE ─────────────────────────────────────────
+const S={FOLLOWUP:'followup',ANSWERING:'answering',CLOSING:'closing'};
+let state=S.FOLLOWUP, currentCat=null, currentNews=null;
 
 function startConversation(catId) {
-  currentCat = CATEGORIES.find(c => c.id === catId);
+  currentCat = CATEGORIES.find(c=>c.id===catId);
   show("s-conv");
   setTimeout(deliver, 350);
 }
 function deliver() {
   const items = newsData[currentCat.id];
-  currentNews = items[Math.floor(Math.random() * items.length)];
-  appSays(`Here's your ${currentCat.label} update —`, () => {
-    setTimeout(() => {
-      appSays(currentNews.headline, () => {
-        state = S.FOLLOWUP;
-        setTimeout(() => appSays("Want to know more?", () => micState('ready')), 500);
+  currentNews = items[Math.floor(Math.random()*items.length)];
+  appSays(`Here's your ${currentCat.label} update —`, ()=>{
+    setTimeout(()=>{
+      appSays(currentNews.headline, ()=>{
+        state=S.FOLLOWUP;
+        setTimeout(()=>appSays("Want to know more?", ()=>micState('ready')),500);
       });
-    }, 250);
+    },250);
   });
 }
 function route(i) {
-  if (state === S.FOLLOWUP) {
-    if (i === 'no') { closeConv(); return; }
-    appSays(currentNews.detail || "That's all the detail I have!", () => {
-      state = S.ANSWERING;
-      setTimeout(() => appSays("Anything else?", () => micState('ready')), 500);
+  if (state===S.FOLLOWUP) {
+    if(i==='no'){closeConv();return}
+    appSays(currentNews.detail||"That's all I have!", ()=>{
+      state=S.ANSWERING;
+      setTimeout(()=>appSays("Anything else?", ()=>micState('ready')),500);
     });
-  } else if (state === S.ANSWERING) {
-    if (i === 'no') { closeConv(); return; }
-    appSays(currentNews.extra || "That's everything I've got!", () => setTimeout(closeConv, 400));
-  } else if (state === S.CLOSING) {
+  } else if (state===S.ANSWERING) {
+    if(i==='no'){closeConv();return}
+    appSays(currentNews.extra||"That's everything!", ()=>setTimeout(closeConv,400));
+  } else if (state===S.CLOSING) {
     appSays("Hit ↺ start over to go again! 😄");
   }
 }
-function closeConv() { state = S.CLOSING; appSays(`That's all for ${currentCat.label} today! 👋`); }
-function intent(t)   { t=t.toLowerCase(); if(/\b(no|nah|nope|skip|done|bye|thanks|stop|that.?s all)\b/.test(t))return'no'; return'yes'; }
+function closeConv(){state=S.CLOSING;appSays(`That's all for ${currentCat.label} today! 👋`);}
+function intent(t){t=t.toLowerCase();if(/\b(no|nah|nope|skip|done|bye|thanks|stop)\b/.test(t))return'no';return'yes';}
 
-// ── TTS ────────────────────────────────────────────────────
-const synth = window.speechSynthesis;
-let voices = [];
-function loadVoices() { voices = synth.getVoices(); }
+// ── TTS ───────────────────────────────────────────────────
+const synth=window.speechSynthesis;
+let voices=[];
+function loadVoices(){voices=synth.getVoices();}
 loadVoices();
-if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
-function speak(text, onEnd) {
+if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=loadVoices;
+function speak(text,onEnd){
   synth.cancel();
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.rate = 1.05; utt.pitch = 1.05;
-  const pick = voices.find(v => v.lang.startsWith('en') && /female|zira|samantha|karen/i.test(v.name))
-            || voices.find(v => v.lang.startsWith('en')) || voices[0];
-  if (pick) utt.voice = pick;
-  setStatus('speaking'); wave('active');
-  utt.onend = () => { setStatus('idle'); wave('off'); if (onEnd) onEnd(); };
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.rate=1.05;utt.pitch=1.05;
+  const pick=voices.find(v=>v.lang.startsWith('en')&&/female|zira|samantha|karen/i.test(v.name))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
+  if(pick)utt.voice=pick;
+  setStatus('speaking');wave('active');
+  utt.onend=()=>{setStatus('idle');wave('off');if(onEnd)onEnd();};
   synth.speak(utt);
 }
 
-// ── STT ────────────────────────────────────────────────────
-let recog = null, listening = false;
-function buildRecog() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
-  const r = new SR();
-  r.continuous = false; r.interimResults = false; r.lang = 'en-US';
-  r.onresult = e => handleInput(e.results[0][0].transcript);
-  r.onend    = () => { listening=false; micState('ready'); setStatus('idle'); wave('off'); };
-  r.onerror  = () => { listening=false; micState('ready'); };
+// ── STT ───────────────────────────────────────────────────
+let recog=null,listening=false;
+function buildRecog(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR)return null;
+  const r=new SR();r.continuous=false;r.interimResults=false;r.lang='en-US';
+  r.onresult=e=>handleInput(e.results[0][0].transcript);
+  r.onend=()=>{listening=false;micState('ready');setStatus('idle');wave('off');};
+  r.onerror=()=>{listening=false;micState('ready');};
   return r;
 }
-function startListen() { recog=buildRecog(); if(!recog){document.getElementById('textIn').focus();return} recog.start(); listening=true; micState('listening'); setStatus('listening'); wave('listening'); }
-function stopListen()  { if(recog) recog.stop(); listening=false; micState('ready'); }
-function toggleMic()   { listening ? stopListen() : startListen(); }
+function startListen(){recog=buildRecog();if(!recog){document.getElementById('textIn').focus();return}recog.start();listening=true;micState('listening');setStatus('listening');wave('listening');}
+function stopListen(){if(recog)recog.stop();listening=false;micState('ready');}
+function toggleMic(){listening?stopListen():startListen();}
 
-// ── UI HELPERS ─────────────────────────────────────────────
-function setStatus(s)    { const el=document.getElementById('statusPill'); el.textContent=s; el.className='status-pill'+(s!=='idle'?' '+s:''); }
-function wave(mode)      { const wf=document.getElementById('waveform'); wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':''); }
-function micState(s)     { document.getElementById('micBtn').className='mic-btn '+s; document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak'; }
-function bubble(who,txt) { const c=document.getElementById('chat'),d=document.createElement('div'); d.className='bubble '+who; d.innerHTML=`<div class="avatar">${who==='app'?'🎙':'👤'}</div><div class="btext">${txt}</div>`; c.appendChild(d); c.scrollTop=c.scrollHeight; }
-function appSays(t,fn)   { bubble('app',t); speak(t,fn); }
-function handleInput(t)  { if(!t.trim())return; bubble('user',t); route(intent(t)); }
-function sendText()      { const el=document.getElementById('textIn'),v=el.value.trim(); if(!v)return; el.value=''; handleInput(v); }
+// ── UI HELPERS ────────────────────────────────────────────
+function setStatus(s){const el=document.getElementById('statusPill');el.textContent=s;el.className='status-pill'+(s!=='idle'?' '+s:'');}
+function wave(mode){const wf=document.getElementById('waveform');wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':'');}
+function micState(s){document.getElementById('micBtn').className='mic-btn '+s;document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak';}
+function bubble(who,txt){const c=document.getElementById('chat'),d=document.createElement('div');d.className='bubble '+who;d.innerHTML=`<div class="avatar">${who==='app'?'🎙':'👤'}</div><div class="btext">${txt}</div>`;c.appendChild(d);c.scrollTop=c.scrollHeight;}
+function appSays(t,fn){bubble('app',t);speak(t,fn);}
+function handleInput(t){if(!t.trim())return;bubble('user',t);route(intent(t));}
+function sendText(){const el=document.getElementById('textIn'),v=el.value.trim();if(!v)return;el.value='';handleInput(v);}
 </script>
 </body>
 </html>
