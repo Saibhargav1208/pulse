@@ -138,6 +138,10 @@
     <div class="load-title">Fetching your news...</div>
     <div class="load-step" id="loadStep">Starting up...</div>
     <div class="load-bar-wrap" style="width:100%"><div class="load-bar" id="loadBar"></div></div>
+    <!-- LIVE DEBUG — always visible during load -->
+    <div id="debugBox" style="width:100%;background:#0d1117;border:1px solid #1e1e2e;border-radius:8px;padding:10px;max-height:220px;overflow-y:auto">
+      <pre id="debugLog" style="font-size:10px;line-height:1.8;white-space:pre-wrap;word-break:break-all;color:#5a5a7a">Waiting to start...\n</pre>
+    </div>
   </div>
 
   <!-- SCREEN 3: CATEGORIES -->
@@ -189,16 +193,14 @@ let debugLines = [];
 
 // ── DEBUG ──────────────────────────────────────────────────
 function dlog(type, msg) {
-  const ts   = new Date().toISOString().slice(11,19);
-  const line = `[${ts}] ${type.toUpperCase()}: ${msg}`;
+  const ts    = new Date().toISOString().slice(11,19);
+  const line  = `[${ts}] ${type.toUpperCase()}: ${msg}`;
   debugLines.push(line);
-  const pre  = document.getElementById("debugLog");
-  const span = document.createElement("span");
-  span.className = type === "ok" ? "ok" : type === "err" ? "err" : "inf";
-  span.textContent = line + "\n";
-  pre.appendChild(span);
-  const box = document.getElementById("debugBox");
-  box.scrollTop = box.scrollHeight;
+  const color = type==="ok" ? "#6af7a0" : type==="err" ? "#f76a6a" : "#7c6af7";
+  const pre   = document.getElementById("debugLog");
+  if (pre) pre.innerHTML += `<span style="color:${color}">${line}\n</span>`;
+  const box   = document.getElementById("debugBox");
+  if (box) box.scrollTop = box.scrollHeight;
 }
 
 function toggleDebug() {
