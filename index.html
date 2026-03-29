@@ -162,7 +162,7 @@
     <div class="header">
       <div class="logo-dot"></div>
       <div class="app-name">Pulse<span>.</span></div>
-      <div class="status-pill" id="statusPill" style="display:none">idle</div>
+      <div class="status-pill" id="statusPill">idle</div>
     </div>
 
     <!-- SCREEN 1: START -->
@@ -182,10 +182,7 @@
         </div>
         <div class="pref-group">
           <div class="pref-label">Voice</div>
-          <select class="pref-select" id="voiceSelect">
-            <option value="female">👩 Female</option>
-            <option value="male">👨 Male</option>
-          </select>
+          <select class="pref-select" id="voiceSelect"><option>Loading voices...</option></select>
         </div>
       </div>
 
@@ -259,13 +256,12 @@ window._selectedVoice = CONFIG.VOICE;
 
 // Set dropdown defaults
 document.getElementById("toneSelect").value  = CONFIG.TONE;
-document.getElementById("voiceSelect").value = CONFIG.VOICE;
 
 document.getElementById("toneSelect").addEventListener("change", e => {
   window._selectedTone = e.target.value;
 });
 document.getElementById("voiceSelect").addEventListener("change", e => {
-  window._selectedVoice = e.target.value;
+  window._selectedVoiceIdx = parseInt(e.target.value);
 });
 
 // ── BUILD CHIPS ───────────────────────────────────────────
@@ -479,7 +475,6 @@ const S = { FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing' };
 let state = S.FOLLOWUP, currentCat = null, currentNews = null;
 
 function startConversation(catId) {
-  document.getElementById("statusPill").style.display = "block";
   const allCats = [...CONFIG.CATEGORIES, ...CONFIG.EXTRA_CATEGORIES];
   currentCat = allCats.find(c => c.id === catId);
   show("s-conv");
@@ -517,16 +512,37 @@ function intent(t)   { t=t.toLowerCase(); return /\b(no|nah|nope|skip|done|bye|t
 // ── TTS ───────────────────────────────────────────────────
 const synth = window.speechSynthesis;
 let voices = [];
-function loadVoices() { voices = synth.getVoices(); }
+window._selectedVoiceIdx = 0;
+
+function loadVoices() {
+  voices = synth.getVoices().filter(v => v.lang.startsWith("en"));
+  populateVoiceDropdown();
+}
+
+function populateVoiceDropdown() {
+  const sel = document.getElementById("voiceSelect");
+  if (!voices.length) return;
+  sel.innerHTML = "";
+  voices.forEach((v, i) => {
+    const opt = document.createElement("option");
+    opt.value       = i;
+    opt.textContent = v.name;
+    sel.appendChild(opt);
+  });
+  // Default to first voice — user can change
+  window._selectedVoiceIdx = 0;
+}
+
 loadVoices();
-if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
 
 function speak(text, onEnd) {
   synth.cancel();
   const utt = new SpeechSynthesisUtterance(text);
   utt.rate = 1.0; utt.pitch = 1.05; utt.volume = 1.0;
-  const gender = window._selectedVoice || "female";
-  utt.voice = pickVoice(voices, gender);
+  utt.voice = voices[window._selectedVoiceIdx] || voices[0] || null;
   setStatus('speaking'); wave('active');
   utt.onend   = () => { setStatus('idle'); wave('off'); if (onEnd) onEnd(); };
   utt.onerror = () => { setStatus('idle'); wave('off'); if (onEnd) onEnd(); };
