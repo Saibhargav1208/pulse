@@ -9,18 +9,16 @@
     :root{
       --bg:#0a0a0f;--surface:#13131a;--border:#1e1e2e;
       --text:#e8e8f0;--muted:#5a5a7a;--accent:#7c6af7;
-      --green:#6af7a0;--red:#f76a6a;--yellow:#f7e06a;--orange:#f7a06a;
+      --green:#6af7a0;--red:#f76a6a;--yellow:#f7e06a;
       --font-display:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
     }
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;display:flex;align-items:center;justify-content:center}
 
-    /* ── TWO COLUMN LAYOUT ── */
     .layout{display:flex;gap:16px;width:100%;max-width:980px;padding:24px 20px;align-items:flex-start}
     .main-col{width:460px;flex-shrink:0;display:flex;flex-direction:column;gap:20px}
-    .sidebar-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:0;position:sticky;top:24px}
+    .sidebar-col{flex:1;min-width:0;display:flex;flex-direction:column;position:sticky;top:24px}
 
-    /* ── HEADER ── */
     .header{display:flex;align-items:center;gap:10px}
     .logo-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);animation:blink 2.5s infinite}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
@@ -30,20 +28,40 @@
     .status-pill.listening{border-color:var(--green);color:var(--green)}
     .status-pill.speaking{border-color:var(--accent);color:var(--accent)}
 
-    /* ── SCREENS ── */
-    .screen{display:none;flex-direction:column;gap:16px}
+    .screen{display:none;flex-direction:column;gap:18px}
     .screen.active{display:flex}
     .big-title{font-family:var(--font-display);font-size:34px;font-weight:800;line-height:1.05;letter-spacing:-1px}
     .big-title span{color:var(--accent)}
-    .go-btn{padding:13px;background:var(--accent);border:none;border-radius:99px;color:white;font-family:var(--font-mono);font-size:13px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:all .2s}
+
+    /* ── DROPDOWNS ── */
+    .prefs-row{display:flex;gap:10px;align-items:center}
+    .pref-group{display:flex;flex-direction:column;gap:5px;flex:1}
+    .pref-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
+    .pref-select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a5a7a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+    .pref-select:focus{border-color:var(--accent)}
+    .pref-select option{background:var(--surface)}
+
+    /* ── CATEGORY CHIPS ── */
+    .chips-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:2px}
+    .chips-wrap{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:99px;border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .2s;background:var(--surface);color:var(--muted);user-select:none}
+    .chip:hover{border-color:var(--accent);color:var(--text)}
+    .chip.selected{background:var(--accent);border-color:var(--accent);color:white}
+    .chip .chip-emoji{font-size:14px}
+    .chips-divider{width:100%;height:1px;background:var(--border);margin:4px 0}
+    .chips-more-label{font-size:10px;color:var(--muted);width:100%}
+
+    .go-btn{padding:14px;background:var(--accent);border:none;border-radius:99px;color:white;font-family:var(--font-mono);font-size:13px;font-weight:500;cursor:pointer;letter-spacing:.5px;transition:all .2s;width:100%}
     .go-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,106,247,.3)}
     .go-btn:disabled{opacity:.4;transform:none;cursor:not-allowed}
+
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;align-self:center}
     @keyframes spin{to{transform:rotate(360deg)}}
     .load-title{font-family:var(--font-display);font-size:18px;font-weight:700;text-align:center}
     .load-step{font-size:12px;color:var(--muted);text-align:center}
     .load-bar-wrap{width:100%;height:4px;background:var(--border);border-radius:99px;overflow:hidden}
     .load-bar{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .5s ease}
+
     .cat-intro{font-family:var(--font-display);font-size:26px;font-weight:800;line-height:1.1;letter-spacing:-.5px}
     .cat-intro span{color:var(--accent)}
     .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -53,12 +71,14 @@
     .cat-emoji{font-size:22px}
     .cat-label{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--cat-color,var(--text))}
     .cat-count{font-size:10px;color:var(--muted)}
+
     .waveform{display:flex;align-items:center;justify-content:center;gap:4px;height:52px}
     .bar{width:3px;border-radius:99px;background:var(--accent);height:6px;opacity:.2;transition:background .3s}
     .waveform.active .bar{opacity:1;animation:wav .9s infinite ease-in-out}
     .waveform.listening .bar{background:var(--green)}
     .bar:nth-child(1){animation-delay:.00s}.bar:nth-child(2){animation-delay:.10s}.bar:nth-child(3){animation-delay:.20s}.bar:nth-child(4){animation-delay:.30s}.bar:nth-child(5){animation-delay:.40s}.bar:nth-child(6){animation-delay:.30s}.bar:nth-child(7){animation-delay:.20s}.bar:nth-child(8){animation-delay:.10s}.bar:nth-child(9){animation-delay:.00s}
     @keyframes wav{0%,100%{height:6px}50%{height:36px}}
+
     .conversation{display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:280px;overflow-y:auto;padding:2px 0}
     .conversation::-webkit-scrollbar{width:2px}
     .conversation::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
@@ -71,6 +91,7 @@
     .btext{max-width:82%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.65}
     .bubble.app .btext{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:2px}
     .bubble.user .btext{background:var(--accent);color:white;border-bottom-right-radius:2px}
+
     .mic-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
     .mic-btn{width:62px;height:62px;border-radius:50%;border:none;cursor:pointer;font-size:22px;transition:all .2s}
     .mic-btn.off{background:var(--surface);border:2px solid var(--border)}
@@ -79,6 +100,7 @@
     @keyframes rdy{0%,100%{box-shadow:0 0 0 0 rgba(124,106,247,.35)}50%{box-shadow:0 0 0 14px rgba(124,106,247,0)}}
     @keyframes lstn{0%,100%{box-shadow:0 0 0 0 rgba(106,247,160,.4)}50%{box-shadow:0 0 0 18px rgba(106,247,160,0)}}
     .mic-hint{font-size:11px;color:var(--muted);letter-spacing:.5px}
+
     .text-row{display:flex;gap:8px}
     .text-in{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .2s}
     .text-in:focus{border-color:var(--accent)}
@@ -91,8 +113,6 @@
     .sidebar{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;max-height:90vh;display:flex;flex-direction:column}
     .sidebar-title{padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:6px}
     .sidebar-title strong{color:var(--text);font-size:13px;text-transform:none;letter-spacing:0}
-
-    /* category tabs */
     .sb-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0}
     .sb-tabs::-webkit-scrollbar{height:0}
     .sb-tab{padding:8px 12px;font-size:11px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-mono)}
@@ -102,42 +122,26 @@
     .sb-tab.done .dot{background:var(--green)}
     .sb-tab.loading .dot{background:var(--yellow);animation:blink 1s infinite}
     .sb-tab.error .dot{background:var(--red)}
-
-    /* content panels */
     .sb-panels{flex:1;overflow-y:auto;padding:14px}
     .sb-panels::-webkit-scrollbar{width:3px}
     .sb-panels::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
     .sb-panel{display:none}
     .sb-panel.active{display:block}
-
-    /* sections inside a panel */
     .sb-section{margin-bottom:16px}
     .sb-section-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
     .sb-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
-
-    /* article card */
     .article-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:11px;line-height:1.7}
     .article-card .art-source{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
     .article-card .art-title{color:var(--text);font-weight:600;margin-bottom:4px;line-height:1.5}
     .article-card .art-desc{color:var(--muted);line-height:1.6}
-
-    /* prompt block */
     .prompt-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:10px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:var(--muted);max-height:160px;overflow-y:auto}
     .prompt-block strong{color:var(--accent);display:block;margin-bottom:4px;font-size:9px;text-transform:uppercase;letter-spacing:1px}
     .prompt-block span{color:var(--text)}
-
-    /* output block */
-    .output-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:10px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:#6af7a044;max-height:160px;overflow-y:auto}
-    .output-block.has-data{color:var(--green)}
-
-    /* final card */
+    .output-block{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:10px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:var(--green);max-height:160px;overflow-y:auto}
     .final-card{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px;margin-bottom:8px;font-size:11px}
     .final-card .fc-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:2px}
     .final-card .fc-val{color:var(--text);line-height:1.6}
-
     .sb-placeholder{font-size:11px;color:var(--muted);padding:20px 0;text-align:center}
-
-    /* mobile sidebar toggle */
     .sb-toggle{display:none;position:fixed;bottom:20px;right:20px;width:48px;height:48px;background:var(--accent);border:none;border-radius:50%;color:white;font-size:18px;cursor:pointer;box-shadow:0 4px 20px rgba(124,106,247,.5);z-index:100}
 
     @media(max-width:780px){
@@ -162,13 +166,36 @@
     </div>
 
     <!-- SCREEN 1: START -->
-    <div class="screen active" id="s-start" style="padding:20px 0;align-items:center;text-align:center;gap:20px">
+    <div class="screen active" id="s-start" style="padding:16px 0">
       <div class="big-title">Your news,<br><span>out loud.</span></div>
-      <p style="font-size:12px;color:var(--muted);line-height:1.7">
-        Fresh AI-summarized news, just for you.<br>
-        Tone: <strong style="color:var(--accent)" id="toneLabel"></strong>
-      </p>
-      <button class="go-btn" onclick="startFetch()">Fetch Today's News →</button>
+
+      <!-- Tone + Voice dropdowns -->
+      <div class="prefs-row">
+        <div class="pref-group">
+          <div class="pref-label">Tone</div>
+          <select class="pref-select" id="toneSelect">
+            <option value="friendly">😊 Friendly</option>
+            <option value="savage">😈 Savage</option>
+            <option value="formal">📰 Formal</option>
+            <option value="chill">😎 Chill</option>
+          </select>
+        </div>
+        <div class="pref-group">
+          <div class="pref-label">Voice</div>
+          <select class="pref-select" id="voiceSelect">
+            <option value="female">👩 Female</option>
+            <option value="male">👨 Male</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Category chips -->
+      <div>
+        <div class="chips-label">Your Topics</div>
+        <div class="chips-wrap" id="chipsWrap"></div>
+      </div>
+
+      <button class="go-btn" id="goBtn" onclick="startFetch()">Fetch Today's News →</button>
     </div>
 
     <!-- SCREEN 2: LOADING -->
@@ -183,6 +210,9 @@
     <div class="screen" id="s-cat">
       <div class="cat-intro">What's your<br><span>vibe today?</span></div>
       <div class="cat-grid" id="catGrid"></div>
+      <div style="text-align:center">
+        <span class="restart-link" onclick="location.reload()">↺ change preferences</span>
+      </div>
     </div>
 
     <!-- SCREEN 4: CONVERSATION -->
@@ -205,49 +235,114 @@
     </div>
   </div>
 
-  <!-- ── SIDEBAR COLUMN ── -->
+  <!-- ── SIDEBAR ── -->
   <div class="sidebar-col" id="sidebarCol">
     <div class="sidebar">
-      <div class="sidebar-title">🔍 <strong>Pipeline Inspector</strong> &nbsp;— see exactly what's happening</div>
+      <div class="sidebar-title">🔍 <strong>Pipeline Inspector</strong></div>
       <div class="sb-tabs" id="sbTabs"></div>
       <div class="sb-panels" id="sbPanels">
         <div class="sb-placeholder">Run a fetch to see the data pipeline here.</div>
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- Mobile toggle -->
-<button class="sb-toggle" id="sbToggle" onclick="toggleSidebar()" title="Toggle Inspector">🔍</button>
+<button class="sb-toggle" id="sbToggle" onclick="toggleSidebar()">🔍</button>
 
 <script src="config.js"></script>
 <script src="ai.js"></script>
 <script>
-// ── INIT ──────────────────────────────────────────────────
-document.getElementById("toneLabel").textContent = CONFIG.TONE;
+// ── SELECTED STATE ────────────────────────────────────────
+let selectedCatIds = CONFIG.CATEGORIES.map(c => c.id);
+window._selectedTone  = CONFIG.TONE;
+window._selectedVoice = CONFIG.VOICE;
 
-// Build sidebar tabs on load
-function initSidebar() {
+// Set dropdown defaults
+document.getElementById("toneSelect").value  = CONFIG.TONE;
+document.getElementById("voiceSelect").value = CONFIG.VOICE;
+
+document.getElementById("toneSelect").addEventListener("change", e => {
+  window._selectedTone = e.target.value;
+});
+document.getElementById("voiceSelect").addEventListener("change", e => {
+  window._selectedVoice = e.target.value;
+});
+
+// ── BUILD CHIPS ───────────────────────────────────────────
+function buildChips() {
+  const wrap = document.getElementById("chipsWrap");
+  wrap.innerHTML = "";
+
+  // Default categories
+  CONFIG.CATEGORIES.forEach(cat => {
+    wrap.appendChild(makeChip(cat, true));
+  });
+
+  // Divider + "more" label
+  const div = document.createElement("div");
+  div.className = "chips-divider";
+  wrap.appendChild(div);
+  const more = document.createElement("div");
+  more.className = "chips-more-label";
+  more.textContent = "Add more:";
+  wrap.appendChild(more);
+
+  // Extra categories
+  CONFIG.EXTRA_CATEGORIES.forEach(cat => {
+    wrap.appendChild(makeChip(cat, false));
+  });
+}
+
+function makeChip(cat, defaultSelected) {
+  if (defaultSelected && !selectedCatIds.includes(cat.id)) {
+    selectedCatIds.push(cat.id);
+  }
+  const chip = document.createElement("div");
+  chip.className  = "chip" + (selectedCatIds.includes(cat.id) ? " selected" : "");
+  chip.id         = `chip-${cat.id}`;
+  chip.innerHTML  = `<span class="chip-emoji">${cat.emoji}</span>${cat.label}`;
+  chip.onclick    = () => toggleChip(cat.id);
+  return chip;
+}
+
+function toggleChip(catId) {
+  const idx = selectedCatIds.indexOf(catId);
+  if (idx !== -1) {
+    if (selectedCatIds.length === 1) return; // keep at least 1
+    selectedCatIds.splice(idx, 1);
+  } else {
+    selectedCatIds.push(catId);
+  }
+  document.getElementById(`chip-${catId}`)?.classList.toggle("selected", selectedCatIds.includes(catId));
+}
+
+buildChips();
+
+// ── ACTIVE CATEGORY LIST ──────────────────────────────────
+function getActiveCategories() {
+  const allCats = [...CONFIG.CATEGORIES, ...CONFIG.EXTRA_CATEGORIES];
+  return selectedCatIds.map(id => allCats.find(c => c.id === id)).filter(Boolean);
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────
+function initSidebar(categories) {
   const tabs   = document.getElementById("sbTabs");
   const panels = document.getElementById("sbPanels");
   tabs.innerHTML = "";
   panels.innerHTML = "";
 
-  CONFIG.CATEGORIES.forEach((cat, i) => {
-    // Tab
+  categories.forEach((cat, i) => {
     const tab = document.createElement("button");
-    tab.className  = "sb-tab" + (i === 0 ? " active" : "");
-    tab.id         = `tab-${cat.id}`;
-    tab.innerHTML  = `<span class="dot"></span>${cat.emoji} ${cat.label}`;
-    tab.onclick    = () => switchTab(cat.id);
+    tab.className = "sb-tab" + (i === 0 ? " active" : "");
+    tab.id        = `tab-${cat.id}`;
+    tab.innerHTML = `<span class="dot"></span>${cat.emoji} ${cat.label}`;
+    tab.onclick   = () => switchTab(cat.id);
     tabs.appendChild(tab);
 
-    // Panel
     const panel = document.createElement("div");
     panel.className = "sb-panel" + (i === 0 ? " active" : "");
     panel.id        = `panel-${cat.id}`;
-    panel.innerHTML = `<div class="sb-placeholder">Waiting for fetch...</div>`;
+    panel.innerHTML = `<div class="sb-placeholder">Waiting...</div>`;
     panels.appendChild(panel);
   });
 }
@@ -263,32 +358,26 @@ function toggleSidebar() {
   document.getElementById("sidebarCol").classList.toggle("open");
 }
 
-// ── SIDEBAR EVENT LISTENER ────────────────────────────────
 window.addEventListener("pulse:sidebar", (e) => {
   const { catId, section, data } = e.detail;
-  renderSidebarSection(catId, section, data);
-
-  // Update tab state
+  renderSection(catId, section, data);
   const tab = document.getElementById(`tab-${catId}`);
   if (!tab) return;
   if (section === "status") {
     tab.classList.remove("done","loading","error");
-    if (data === "done")          tab.classList.add("done");
-    else if (data.includes("fail") || data === "error") tab.classList.add("error");
-    else                          tab.classList.add("loading");
+    if      (data === "done")              tab.classList.add("done");
+    else if (data.includes?.("fail"))      tab.classList.add("error");
+    else                                   tab.classList.add("loading");
   }
   if (section === "error") tab.classList.add("error");
 });
 
-function renderSidebarSection(catId, section, data) {
+function renderSection(catId, section, data) {
   const panel = document.getElementById(`panel-${catId}`);
   if (!panel) return;
-
-  // Remove placeholder
   const ph = panel.querySelector(".sb-placeholder");
   if (ph) ph.remove();
 
-  // Find or create section div
   let sec = panel.querySelector(`[data-section="${section}"]`);
   if (!sec) {
     sec = document.createElement("div");
@@ -299,54 +388,34 @@ function renderSidebarSection(catId, section, data) {
 
   if (section === "rawNews") {
     sec.innerHTML = `<div class="sb-section-title">📰 Raw News from API</div>` +
-      data.map(a => `
-        <div class="article-card">
-          <div class="art-source">${a.source}</div>
-          <div class="art-title">${a.title}</div>
-          <div class="art-desc">${a.summary || "(no description)"}</div>
-        </div>`).join("");
-  }
-
-  else if (section === "groqInput") {
+      data.map(a => `<div class="article-card"><div class="art-source">${a.source}</div><div class="art-title">${a.title}</div><div class="art-desc">${a.summary||"(no description)"}</div></div>`).join("");
+  } else if (section === "groqInput") {
     sec.innerHTML = `<div class="sb-section-title">🤖 Input sent to Groq</div>
       <div class="prompt-block">
         <strong>Model</strong><span>${data.model}  |  tone: ${data.tone}</span>
-        <strong>System Prompt</strong><span>${escHtml(data.systemPrompt)}</span>
-        <strong>User Prompt</strong><span>${escHtml(data.userPrompt)}</span>
+        <strong>System Prompt</strong><span>${esc(data.systemPrompt)}</span>
+        <strong>User Prompt</strong><span>${esc(data.userPrompt)}</span>
       </div>`;
-  }
-
-  else if (section === "groqOutput") {
-    sec.innerHTML = `<div class="sb-section-title">💬 Raw Output from Groq</div>
-      <div class="output-block has-data">${escHtml(data)}</div>`;
-  }
-
-  else if (section === "final") {
+  } else if (section === "groqOutput") {
+    sec.innerHTML = `<div class="sb-section-title">💬 Raw Output from Groq</div><div class="output-block">${esc(data)}</div>`;
+  } else if (section === "final") {
     sec.innerHTML = `<div class="sb-section-title">✅ Final Parsed Result</div>` +
-      data.map((item, i) => `
-        <div class="final-card">
-          <div class="fc-label">Story ${i+1} · ${item.source}</div>
-          <div class="fc-label" style="margin-top:6px;color:var(--accent)">Headline</div>
-          <div class="fc-val">${item.headline}</div>
-          <div class="fc-label" style="margin-top:6px">Detail</div>
-          <div class="fc-val">${item.detail}</div>
-          <div class="fc-label" style="margin-top:6px">Extra</div>
-          <div class="fc-val">${item.extra}</div>
-        </div>`).join("");
-  }
-
-  else if (section === "error") {
-    sec.innerHTML = `<div class="sb-section-title" style="color:var(--red)">❌ Error</div>
-      <div class="output-block" style="color:var(--red)">${escHtml(String(data))}</div>`;
+      data.map((item,i) => `<div class="final-card">
+        <div class="fc-label">Story ${i+1} · ${item.source}</div>
+        <div class="fc-label" style="margin-top:6px;color:var(--accent)">Headline</div><div class="fc-val">${item.headline}</div>
+        <div class="fc-label" style="margin-top:6px">Detail</div><div class="fc-val">${item.detail}</div>
+        <div class="fc-label" style="margin-top:6px">Extra</div><div class="fc-val">${item.extra}</div>
+      </div>`).join("");
+  } else if (section === "error") {
+    sec.innerHTML = `<div class="sb-section-title" style="color:var(--red)">❌ Error</div><div class="output-block" style="color:var(--red)">${esc(String(data))}</div>`;
   }
 }
 
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function esc(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-// ── SCREENS ───────────────────────────────────────────────
+// ── MAIN FETCH FLOW ───────────────────────────────────────
 let newsData = {};
 
 function show(id) {
@@ -358,17 +427,20 @@ function setStep(msg, pct) {
   document.getElementById("loadBar").style.width  = pct + "%";
 }
 
-// ── MAIN FETCH FLOW ───────────────────────────────────────
 async function startFetch() {
-  initSidebar();
+  const activeCats = getActiveCategories();
+  if (!activeCats.length) return;
+
+  newsData = {};
+  initSidebar(activeCats);
   show("s-load");
+
   let anySuccess = false;
 
-  for (let i = 0; i < CONFIG.CATEGORIES.length; i++) {
-    const cat = CONFIG.CATEGORIES[i];
-    setStep(`${cat.emoji} ${cat.label}...`, Math.round((i / CONFIG.CATEGORIES.length) * 90));
-    switchTab(cat.id);   // auto-switch sidebar to active category
-
+  for (let i = 0; i < activeCats.length; i++) {
+    const cat = activeCats[i];
+    setStep(`${cat.emoji} ${cat.label}...`, Math.round((i / activeCats.length) * 90));
+    switchTab(cat.id);
     try {
       newsData[cat.id] = await fetchAndSummarize(cat);
       anySuccess = true;
@@ -384,21 +456,19 @@ async function startFetch() {
   await new Promise(r => setTimeout(r, 600));
 
   if (!anySuccess) { setStep("❌ All failed — check sidebar →", 100); return; }
-
-  buildCategoryGrid();
+  buildCategoryGrid(activeCats);
   show("s-cat");
 }
 
-// ── CATEGORY GRID ─────────────────────────────────────────
-function buildCategoryGrid() {
+function buildCategoryGrid(activeCats) {
   const grid = document.getElementById("catGrid");
   grid.innerHTML = "";
-  CONFIG.CATEGORIES.forEach(cat => {
+  activeCats.forEach(cat => {
     const items = newsData[cat.id] || [];
     const btn   = document.createElement("button");
     btn.className = "cat-btn" + (items.length === 0 ? " empty" : "");
     btn.style.setProperty("--cat-color", cat.color);
-    btn.innerHTML = `<span class="cat-emoji">${cat.emoji}</span><span class="cat-label">${cat.label}</span><span class="cat-count">${items.length > 0 ? items.length+" stories" : "unavailable"}</span>`;
+    btn.innerHTML = `<span class="cat-emoji">${cat.emoji}</span><span class="cat-label">${cat.label}</span><span class="cat-count">${items.length > 0 ? items.length+" stories":"unavailable"}</span>`;
     if (items.length > 0) btn.onclick = () => startConversation(cat.id);
     grid.appendChild(btn);
   });
@@ -409,7 +479,8 @@ const S = { FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing' };
 let state = S.FOLLOWUP, currentCat = null, currentNews = null;
 
 function startConversation(catId) {
-  currentCat = CONFIG.CATEGORIES.find(c => c.id === catId);
+  const allCats = [...CONFIG.CATEGORIES, ...CONFIG.EXTRA_CATEGORIES];
+  currentCat = allCats.find(c => c.id === catId);
   show("s-conv");
   setTimeout(deliver, 400);
 }
@@ -453,13 +524,11 @@ function speak(text, onEnd) {
   synth.cancel();
   const utt = new SpeechSynthesisUtterance(text);
   utt.rate = 1.0; utt.pitch = 1.05; utt.volume = 1.0;
-  const pick = voices.find(v => v.lang.startsWith('en') && /female|zira|samantha|karen|google/i.test(v.name))
-            || voices.find(v => v.lang.startsWith('en-'))
-            || voices[0];
-  if (pick) utt.voice = pick;
+  const gender = window._selectedVoice || "female";
+  utt.voice = pickVoice(voices, gender);
   setStatus('speaking'); wave('active');
   utt.onend   = () => { setStatus('idle'); wave('off'); if (onEnd) onEnd(); };
-  utt.onerror = ()  => { setStatus('idle'); wave('off'); if (onEnd) onEnd(); };
+  utt.onerror = () => { setStatus('idle'); wave('off'); if (onEnd) onEnd(); };
   synth.speak(utt);
 }
 
@@ -479,7 +548,6 @@ function startListen() { recog=buildRecog(); if(!recog){document.getElementById(
 function stopListen()  { if(recog)recog.stop(); listening=false; micState('ready'); }
 function toggleMic()   { listening?stopListen():startListen(); }
 
-// ── UI HELPERS ────────────────────────────────────────────
 function setStatus(s)    { const el=document.getElementById('statusPill'); el.textContent=s; el.className='status-pill'+(s!=='idle'?' '+s:''); }
 function wave(mode)      { const wf=document.getElementById('waveform'); wf.className='waveform'+(mode!=='off'?' active':'')+(mode==='listening'?' listening':''); }
 function micState(s)     { document.getElementById('micBtn').className='mic-btn '+s; document.getElementById('micHint').textContent=s==='listening'?'listening...':'tap to speak'; }
