@@ -479,6 +479,7 @@ const S = { FOLLOWUP:'followup', ANSWERING:'answering', CLOSING:'closing' };
 let state = S.FOLLOWUP, currentCat = null, currentNews = null;
 
 function startConversation(catId) {
+  document.getElementById("statusPill").style.display = "block";
   const allCats = [...CONFIG.CATEGORIES, ...CONFIG.EXTRA_CATEGORIES];
   currentCat = allCats.find(c => c.id === catId);
   show("s-conv");
