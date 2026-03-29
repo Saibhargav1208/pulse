@@ -8,40 +8,48 @@ const TONE_PROMPTS = {
 
   friendly: `You summarize news for a voice assistant. The user HEARS this, not reads it.
 Tone: Warm, conversational, like a knowledgeable friend catching you up.
-Rules:
 - headline: 1-2 sentences. What happened. Natural spoken language.
 - detail:   1-2 sentences. Key facts — who, when, where, numbers.
 - extra:    1 sentence. Why it matters or an interesting angle.
 NO bullet points. NO markdown. NO quotes. Write as if speaking out loud.`,
 
-  hype: `You summarize news for a voice assistant. The user HEARS this, not reads it.
-Tone: High energy, excited, like a sports commentator or YouTuber.
-Rules:
-- headline: 1-2 sentences. Make it exciting! Use energy words.
-- detail:   1-2 sentences. The key facts delivered with enthusiasm.
-- extra:    1 sentence. Hype reaction or fan perspective.
+  savage: `You summarize news for a voice assistant. The user HEARS this, not reads it.
+Tone: Brutally honest, no filter, slightly roasts the news. Think a comedian delivering headlines.
+- headline: 1-2 sentences. Say what actually happened, no sugarcoating, maybe a slight dig.
+- detail:   1-2 sentences. The facts, delivered with dry wit.
+- extra:    1 sentence. Brutal honest take or sarcastic observation.
 NO bullet points. NO markdown. NO quotes. Write as if speaking out loud.`,
 
   formal: `You summarize news for a voice assistant. The user HEARS this, not reads it.
 Tone: Professional, clear, like a BBC news anchor.
-Rules:
 - headline: 1-2 sentences. Factual, precise, neutral.
 - detail:   1-2 sentences. Supporting facts with names and dates.
 - extra:    1 sentence. Broader context or significance.
 NO bullet points. NO markdown. NO quotes. Write as if speaking out loud.`,
 
-  genz: `You summarize news for a voice assistant. The user HEARS this, not reads it.
-Tone: Gen-Z, casual, internet-native. Use words like "lowkey", "no cap", "it's giving".
-Rules:
-- headline: 1-2 sentences. Say it like texting your friend.
-- detail:   1-2 sentences. The tea, the facts, keep it real.
-- extra:    1 sentence. Your honest reaction, unfiltered.
+  chill: `You summarize news for a voice assistant. The user HEARS this, not reads it.
+Tone: Laid back, minimal energy, like a relaxed podcast host. Nothing is urgent.
+- headline: 1-2 sentences. What happened, super casually, no rush.
+- detail:   1-2 sentences. The key stuff, easy and simple.
+- extra:    1 sentence. A mellow take or "kinda interesting" observation.
 NO bullet points. NO markdown. NO quotes. Write as if speaking out loud.`
 
 };
 
+// ── VOICE SELECTION ───────────────────────────────────────
+function pickVoice(voices, gender) {
+  if (gender === "male") {
+    return voices.find(v => v.lang.startsWith('en') && /male|david|mark|daniel|james|guy/i.test(v.name))
+        || voices.find(v => v.lang.startsWith('en') && !/female|zira|samantha|karen|victoria/i.test(v.name))
+        || voices[0];
+  } else {
+    return voices.find(v => v.lang.startsWith('en') && /female|zira|samantha|karen|victoria|google uk.*female|google us.*female/i.test(v.name))
+        || voices.find(v => v.lang.startsWith('en-'))
+        || voices[0];
+  }
+}
+
 // ── SIDEBAR DATA STORE ────────────────────────────────────
-// Stores all pipeline data per category so sidebar can display it
 const SidebarData = {};
 
 function sidebarUpdate(catId, section, data) {
@@ -94,15 +102,13 @@ async function fetchNewsForCategory(category) {
     url:     a.url || ""
   }));
 
-  // ← Send raw news to sidebar
   sidebarUpdate(category.id, "rawNews", articles);
-
   return articles;
 }
 
 // ── BUILD PROMPT ──────────────────────────────────────────
 function buildPrompt(articles, category) {
-  const tone         = CONFIG.TONE || "friendly";
+  const tone         = window._selectedTone || CONFIG.TONE || "friendly";
   const systemPrompt = TONE_PROMPTS[tone] || TONE_PROMPTS.friendly;
 
   const articlesText = articles.map((a, i) =>
@@ -121,14 +127,7 @@ Return ONLY a valid JSON array of ${articles.length} objects. No markdown, no ex
 
 ${articlesText}`;
 
-  // ← Send prompt to sidebar
-  sidebarUpdate(category.id, "groqInput", {
-    model:        CONFIG.GROQ_MODEL,
-    tone,
-    systemPrompt,
-    userPrompt
-  });
-
+  sidebarUpdate(category.id, "groqInput", { model: CONFIG.GROQ_MODEL, tone, systemPrompt, userPrompt });
   return { systemPrompt, userPrompt };
 }
 
@@ -158,8 +157,6 @@ async function callGroq(systemPrompt, userPrompt, category) {
 
   const data       = await res.json();
   const rawContent = data.choices?.[0]?.message?.content || "[]";
-
-  // ← Send raw Groq output to sidebar
   sidebarUpdate(category.id, "groqOutput", rawContent);
 
   let text  = rawContent.trim().replace(/```json|```/g,"").trim();
@@ -177,10 +174,9 @@ async function callGroq(systemPrompt, userPrompt, category) {
 // ── MAIN ENTRY ────────────────────────────────────────────
 async function fetchAndSummarize(category) {
   sidebarUpdate(category.id, "status", "starting...");
-
-  const articles                   = await fetchNewsForCategory(category);
+  const articles                     = await fetchNewsForCategory(category);
   const { systemPrompt, userPrompt } = buildPrompt(articles, category);
-  const summaries                  = await callGroq(systemPrompt, userPrompt, category);
+  const summaries                    = await callGroq(systemPrompt, userPrompt, category);
 
   const result = summaries.map((s, i) => ({
     headline: s.headline || articles[i]?.title || "",
@@ -190,9 +186,7 @@ async function fetchAndSummarize(category) {
     url:      articles[i]?.url    || ""
   }));
 
-  // ← Send final parsed result to sidebar
   sidebarUpdate(category.id, "final", result);
   sidebarUpdate(category.id, "status", "done");
-
   return result;
 }
